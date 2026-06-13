@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>⌖ datum · acme/workspaces</title>
+  <!-- shipped design-system tokens (colors/type/spacing/base), bundled by serve.ts -->
+  <link rel="stylesheet" href="/tokens.css" />
+  <!-- alias the mockup's --color-* names onto the shipped tokens -->
+  <link rel="stylesheet" href="/tokens-shim.css" />
+  <style>
+    /* page chrome only — the card markup carries its own inline styles, lifted
+       verbatim from docs/datum_tower_drift_state.html. */
+    html, body { background: var(--bg-base); color: var(--text-primary); }
+    body { font-family: var(--font-sans); margin: 0; }
+    .tower-shell {
+      max-width: var(--content-max, 1440px);
+      margin: 0 auto;
+      padding: 24px clamp(16px, 4vw, 40px) 48px;
+    }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    @font-face {
+      font-family: "ti";
+      /* the mockup uses tabler-icon <i class="ti …"> glyphs; no icon font is
+         bundled (zero-install). The line icons degrade to empty inline space,
+         leaving the labels (detected/fenced/advised/…) fully legible — strict
+         color + copy discipline still reads, per the design system. */
+      src: local("ti");
+    }
+    .ti { display: inline-block; width: 0; }
+  </style>
+</head>
+<body>
+  <main class="tower-shell">
+    <div id="tower-root"><!-- VERBATIM markup from docs/datum_tower_drift_state.html -->
+<h2 class="sr-only">Mockup of the Datum Tower home screen in drift state: an epoch strip of contract versions, a drift card showing a schema delta with blast radius and reconciliation status, and a registry rail with presence avatars and a decision ledger.</h2>
+<div style="padding:0.5rem 0 10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+  <div style="display:flex; align-items:baseline; gap:10px;">
+    <span style="font-family:var(--font-mono); font-size:17px; font-weight:500;">&#8982; datum</span>
+    <span style="font-size:13px; color:var(--color-text-secondary);">acme/workspaces</span>
+  </div>
+  <span data-drift-pill style="font-size:12px; padding:4px 10px; border-radius:10px; background:var(--color-background-danger); color:var(--color-text-danger);">drift · 1 delta reconciling</span>
+</div>
+<div data-epoch-strip style="display:flex; align-items:center; gap:6px; margin-bottom:14px;">
+  <span style="font-size:11px; color:var(--color-text-tertiary); font-family:var(--font-mono); flex:none;">epoch</span>
+  <div style="width:9px; height:9px; border-radius:50%; background:var(--color-background-secondary); border:1.5px solid var(--color-border-secondary); flex:none;"></div>
+  <div style="height:1.5px; flex:1; background:var(--color-border-tertiary);"></div>
+  <div style="width:9px; height:9px; border-radius:50%; background:var(--color-background-secondary); border:1.5px solid var(--color-border-secondary); flex:none;"></div>
+  <div style="height:1.5px; flex:1; background:var(--color-border-tertiary);"></div>
+  <div style="display:flex; align-items:center; gap:5px; flex:none;">
+    <div style="width:9px; height:9px; border-radius:50%; background:var(--color-background-secondary); border:1.5px solid var(--color-border-secondary);"></div>
+    <span data-epoch-prev style="font-size:11px; color:var(--color-text-tertiary); font-family:var(--font-mono);">v7 · 12:55</span>
+  </div>
+  <div style="height:1.5px; flex:1; background:var(--color-border-tertiary);"></div>
+  <div style="display:flex; align-items:center; gap:6px; flex:none;">
+    <div style="width:13px; height:13px; border-radius:50%; background:var(--color-background-warning); border:2px solid var(--color-text-warning);"></div>
+    <span data-epoch-live style="font-size:12px; color:var(--color-text-warning); font-family:var(--font-mono); font-weight:500;">v8 · live · 14:02</span>
+  </div>
+</div>
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:12px; margin-bottom:12px;">
+  <div data-drift-card style="background:var(--color-background-primary); border:0.5px solid var(--color-border-secondary); border-radius:var(--border-radius-lg); padding:0; min-width:0; overflow:hidden;">
+    <div style="background:var(--color-background-danger); padding:10px 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+      <span style="font-size:13px; font-weight:500; color:var(--color-text-danger);"><i class="ti ti-alert-triangle" style="font-size:14px; vertical-align:-2px;" aria-hidden="true"></i> contract delta · db.users v7 → v8</span>
+      <span style="font-size:11px; color:var(--color-text-danger); font-family:var(--font-mono);">14:02:11</span>
+    </div>
+    <div style="padding:12px 16px;">
+      <div data-lifecycle-chips style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+        <span data-chip="detected" style="font-size:11px; padding:2px 8px; border-radius:9px; background:var(--color-background-secondary); color:var(--color-text-secondary);"><i class="ti ti-check" style="font-size:11px;" aria-hidden="true"></i> detected 0.3s</span>
+        <span data-chip="fenced" style="font-size:11px; padding:2px 8px; border-radius:9px; background:var(--color-background-secondary); color:var(--color-text-secondary);"><i class="ti ti-lock" style="font-size:11px;" aria-hidden="true"></i> fenced 5.8s</span>
+        <span data-chip="advised" style="font-size:11px; padding:2px 8px; border-radius:9px; background:var(--color-background-secondary); color:var(--color-text-secondary);"><i class="ti ti-bell" style="font-size:11px;" aria-hidden="true"></i> advised 6.4s</span>
+        <span data-chip="reconciled" style="font-size:11px; padding:2px 8px; border-radius:9px; background:var(--color-background-success); color:var(--color-text-success);"><i class="ti ti-check" style="font-size:11px;" aria-hidden="true"></i> reconciled 2/2</span>
+        <span data-chip="patched" style="font-size:11px; padding:2px 8px; border-radius:9px; background:var(--color-background-info); color:var(--color-text-info);"><i class="ti ti-git-pull-request" style="font-size:11px;" aria-hidden="true"></i> spec PR open</span>
+      </div>
+      <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 10px; line-height:1.55;">asha: "phone signups make email the wrong name." <span style="font-family:var(--font-mono);">users.email → contact_email</span>, migration 0042.</p>
+      <svg data-blast-radius viewBox="0 0 380 116" style="width:100%; display:block;" role="img" aria-label="Blast radius: delta at db.users reaching two consumers, both reconciled">
+        <line x1="96" y1="58" x2="218" y2="26" stroke="var(--color-border-secondary)" stroke-width="1.5"/>
+        <line x1="96" y1="58" x2="218" y2="90" stroke="var(--color-border-secondary)" stroke-width="1.5"/>
+        <circle cx="62" cy="58" r="15" fill="var(--color-background-warning)" stroke="var(--color-text-warning)" stroke-width="2"/>
+        <text x="62" y="88" text-anchor="middle" font-size="11" fill="var(--color-text-primary)" font-family="var(--font-mono)">db.users v8</text>
+        <circle cx="228" cy="26" r="7" fill="var(--color-background-success)" stroke="var(--color-text-success)" stroke-width="1.5"/>
+        <text x="244" y="24" font-size="11" fill="var(--color-text-primary)" font-family="var(--font-mono)">ben · routes/users.ts</text>
+        <text x="244" y="38" font-size="11" fill="var(--color-text-secondary)">fenced → reconciled</text>
+        <circle cx="228" cy="90" r="7" fill="var(--color-background-success)" stroke="var(--color-text-success)" stroke-width="1.5"/>
+        <text x="244" y="88" font-size="11" fill="var(--color-text-primary)" font-family="var(--font-mono)">chen · UserCard.tsx</text>
+        <text x="244" y="102" font-size="11" fill="var(--color-text-secondary)">advised → reconciled</text>
+      </svg>
+    </div>
+  </div>
+  <div style="min-width:0;">
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:14px 16px; margin-bottom:12px;">
+      <p style="font-size:14px; font-weight:500; margin:0 0 10px;">current truth</p>
+      <div data-registry-rail>
+      <div data-contract="db.users" style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary);">
+        <span style="font-family:var(--font-mono); font-size:12px;">db.users</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="display:flex;">
+            <span style="width:20px; height:20px; border-radius:50%; background:var(--color-background-info); color:var(--color-text-info); font-size:11px; display:inline-flex; align-items:center; justify-content:center;">A</span>
+            <span style="width:20px; height:20px; border-radius:50%; background:var(--color-background-info); color:var(--color-text-info); font-size:11px; display:inline-flex; align-items:center; justify-content:center; margin-left:-6px;">B</span>
+          </div>
+          <span data-contract-version style="font-size:11px; padding:2px 8px; border-radius:9px; background:var(--color-background-warning); color:var(--color-text-warning); font-family:var(--font-mono);">v8</span>
+        </div>
+      </div>
+      <div data-contract="api.GET /users/:id" style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:0.5px solid var(--color-border-tertiary);">
+        <span style="font-family:var(--font-mono); font-size:12px;">api.GET /users/:id</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="display:flex;">
+            <span style="width:20px; height:20px; border-radius:50%; background:var(--color-background-info); color:var(--color-text-info); font-size:11px; display:inline-flex; align-items:center; justify-content:center;">B</span>
+            <span style="width:20px; height:20px; border-radius:50%; background:var(--color-background-info); color:var(--color-text-info); font-size:11px; display:inline-flex; align-items:center; justify-content:center; margin-left:-6px;">C</span>
+          </div>
+          <span data-contract-version style="font-size:11px; padding:2px 8px; border-radius:9px; background:var(--color-background-secondary); color:var(--color-text-secondary); font-family:var(--font-mono);">v3</span>
+        </div>
+      </div>
+      <div data-contract="deps.db-driver" style="display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
+        <span style="font-family:var(--font-mono); font-size:12px;">deps.db-driver</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width:20px; height:20px; border-radius:50%; background:var(--color-background-info); color:var(--color-text-info); font-size:11px; display:inline-flex; align-items:center; justify-content:center;">A</span>
+          <span data-contract-version style="font-size:11px; padding:2px 8px; border-radius:9px; background:var(--color-background-secondary); color:var(--color-text-secondary); font-family:var(--font-mono);">v2</span>
+        </div>
+      </div>
+      </div>
+    </div>
+    <div style="background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:14px 16px;">
+      <p style="font-size:14px; font-weight:500; margin:0 0 8px;">ledger</p>
+      <div data-ledger>
+      <p style="font-size:11px; margin:0 0 7px; line-height:1.5;"><span style="font-family:var(--font-mono); color:var(--color-text-tertiary);">#112 14:02</span> <span style="color:var(--color-text-secondary);">asha · rename users.email, phone signups landing</span></p>
+      <p style="font-size:11px; margin:0 0 7px; line-height:1.5;"><span style="font-family:var(--font-mono); color:var(--color-text-tertiary);">#111 13:41</span> <span style="color:var(--color-text-secondary);">chen · adopt zod for DTO parsing</span></p>
+      <p style="font-size:11px; margin:0; line-height:1.5;"><span style="font-family:var(--font-mono); color:var(--color-text-tertiary);">#110 13:18</span> <span style="color:var(--color-text-secondary);">ben · invites API returns 202 + job id</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+<div data-fleet-footer style="display:flex; align-items:center; gap:8px; background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:9px 14px;">
+  <span style="font-size:12px; color:var(--color-text-secondary); font-family:var(--font-mono);">&#8982; all sessions synced to v8 · 3 agents live · last delta 4m ago</span>
+</div>
+    </div><!-- /#tower-root -->
+  </main>
+  <script src="/tower.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+/* ============================================================
+   datum tower · tokens shim
+   The lifted markup (docs/datum_tower_drift_state.html) speaks a
+   --color-* vocabulary. The shipped design system speaks
+   --signal-* / --surface-* / --text-* / --radius-*. This file
+   aliases the mockup names onto the shipped tokens so the markup
+   renders VERBATIM under strict color discipline:
+     amber  = contract surface + live epoch  (warning)
+     red    = breaking delta + fence          (danger)
+     blue   = advisory                        (info)
+     green  = reconciled + synced             (success)
+     gray   = ambient activity                (secondary/tertiary)
+   No new hues are introduced; every alias points at a shipped var.
+   ============================================================ */
+
+:root {
+  /* ---- backgrounds / surfaces ---- */
+  --color-background-primary: var(--surface-card);     /* flat card field */
+  --color-background-secondary: var(--surface-raised);  /* ambient gray chip / strip / footer */
+
+  /* signal fills are the low-alpha tints (calm against the field) */
+  --color-background-warning: var(--signal-amber-tint); /* amber = contract / epoch */
+  --color-background-danger: var(--signal-red-tint);    /* red = breaking delta / fence */
+  --color-background-info: var(--signal-blue-tint);     /* blue = advisory / presence */
+  --color-background-success: var(--signal-green-tint); /* green = reconciled / synced */
+
+  /* ---- text ---- */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  --color-text-warning: var(--signal-amber);   /* amber */
+  --color-text-danger: var(--signal-red);       /* red */
+  --color-text-info: var(--signal-blue);        /* blue */
+  --color-text-success: var(--signal-green);    /* green */
+
+  /* ---- borders ---- */
+  --color-border-secondary: var(--border-strong);   /* visible hairline (epoch dots, card edge) */
+  --color-border-tertiary: var(--border-hairline);  /* faint hairline (rules, connectors) */
+
+  /* ---- radii ---- */
+  --border-radius-lg: var(--radius-lg);  /* large surfaces / cards */
+  --border-radius-md: var(--radius-md);  /* footer, panels */
+
+  /* --font-mono is already shipped by tokens/typography.css; kept here as a
+     defensive fallback if the shim is loaded standalone. */
+  --font-mono: var(--font-mono, "Geist Mono", "SF Mono", ui-monospace, monospace);
+}
