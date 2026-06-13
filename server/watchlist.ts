@@ -326,18 +326,40 @@ function depVersions(content: string): Map<string, string> {
 
 function classifyApiShape(
   path: string,
-  _before: string | null,
+  before: string | null,
   after: string,
 ): ClassifyResult {
+  // A routes/controller file is on the api watchlist, but an INTERNAL edit (a
+  // handler-body change — e.g. a query adopting a renamed column) is not itself a
+  // contract change and must NOT bump the epoch. Only a change to the API SURFACE
+  // (a route declaration added, removed, or renamed) is contract-relevant. This is
+  // what lets a fenced consumer's corrective edit reconcile WITHOUT spuriously
+  // ticking the epoch on the live path.
+  const isRouteFile = /(^|\/)routes\//.test(path) || /\.controller\.ts$/.test(path);
+  if (isRouteFile && before !== null) {
+    const a = routeSet(before);
+    const b = routeSet(after);
+    const surfaceUnchanged = a.size === b.size && [...b].every((r) => a.has(r));
+    if (surfaceUnchanged) return { contractRelevant: false };
+  }
+  // a new route file, a changed route surface, or an openapi/trpc spec change.
   const route = routeName(path, after);
-  // Light: flag the surface as moved; record a decision-style note. The hero
-  // mechanical kind is rename_column; api shapes are kept intentionally light.
   return {
     contractRelevant: true,
     contractType: "api_shape",
     contractId: `api.${route}`,
     mechanicalChange: { kind: "decision", text: `api surface change in ${path}` },
   };
+}
+
+// the set of `METHOD /path` route declarations in a source file (best-effort).
+function routeSet(content: string | null): Set<string> {
+  const set = new Set<string>();
+  if (!content) return set;
+  const re = /\b(get|post|put|patch|delete)\s*\(\s*["'`]([^"'`]+)["'`]/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(content)) !== null) set.add(`${m[1].toUpperCase()} ${m[2]}`);
+  return set;
 }
 
 function routeName(path: string, content: string): string {
