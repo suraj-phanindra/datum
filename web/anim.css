@@ -1,0 +1,313 @@
+/* ============================================================
+   web/anim.css — drift-card animation tokens (task #8)
+
+   The choreography from docs/datum-drift-card-animation-spec.md, VERBATIM.
+   Motion means something happened: every keyframe below fires only when the
+   reducer (web/drift-card.js) flips a data-* attribute in response to a bus
+   Event. Nothing loops. The fence punch is the one snappy overshoot.
+
+   Color/state TRUTH lives in inline styles set by renderDriftCard (mapped onto
+   the --color-* shim, web/tokens-shim.css, owned by tower). This file ONLY
+   carries timing + the reduced-motion / TV-mode rules. It introduces no hues.
+
+   ALL motion is gated behind @media (prefers-reduced-motion: reduce): there it
+   collapses to opacity crossfades only; colors, labels, and the count still
+   read in full (the spec's "jank insurance").
+   ============================================================ */
+
+/* ---- animation token vars (exact durations + easings from the spec) ---- */
+:root {
+  --anim-card-expand: 420ms cubic-bezier(0.16, 1, 0.3, 1);     /* collapse -> full card */
+  --anim-epoch-tick: 480ms cubic-bezier(0.65, 0, 0.35, 1);      /* v7 -> v8 live marker */
+  --anim-ripple: 640ms ease-out;                                /* single, opacity .5 -> 0 */
+  --anim-chip-activate: 200ms ease-out;                         /* ghost/muted -> saturated */
+  --anim-chip-complete: 260ms ease;                             /* active -> muted + dot */
+  --anim-line-draw: 320ms ease-out;                             /* per line; stagger 80ms */
+  --anim-line-stagger: 80ms;
+  --anim-node-appear: 240ms ease-out;                           /* neutral / color change */
+  --anim-node-fence: 200ms cubic-bezier(0.34, 1.56, 0.64, 1);   /* scale 1->1.15->1 punch */
+  --anim-node-resolve: 360ms ease-out;                          /* to green */
+  --anim-check: 160ms ease-out;                                 /* checkmark fade */
+  --anim-settle-pulse: 520ms ease-out;                          /* single green pulse */
+  --anim-footer-slide: 300ms ease-out;                          /* resolution footer up */
+}
+
+/* ============================================================
+   card birth — collapse to full card (card.expand 420ms)
+   ============================================================ */
+[data-drift-card] {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-top: 0;
+  transition:
+    max-height var(--anim-card-expand),
+    opacity var(--anim-card-expand),
+    margin var(--anim-card-expand),
+    background 300ms ease; /* header tint progression */
+}
+[data-drift-card][data-open="true"] {
+  max-height: 560px;
+  opacity: 1;
+  margin-top: 12px;
+}
+
+/* the collapsed feed row hides once the card is born. */
+[data-feed-row][data-collapsed="true"] {
+  display: none;
+}
+
+/* header severity tint eases between amber -> red -> neutral -> green. */
+[data-card-head],
+[data-card-title],
+[data-card-time] {
+  transition: background 300ms ease, color 300ms ease;
+}
+
+/* ============================================================
+   epoch strip tick — live marker advances v7 -> v8 (epoch.tick 480ms)
+   ============================================================ */
+[data-epoch-8] {
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity var(--anim-epoch-tick), transform var(--anim-epoch-tick);
+}
+[data-epoch-8][data-visible="true"] {
+  opacity: 1;
+  transform: translateX(0);
+}
+[data-epoch-line] {
+  transition: background var(--anim-epoch-tick);
+}
+
+/* ============================================================
+   amber ripple — single, emanates from the card's left edge (ripple 640ms)
+   never looped: animation runs once when the card opens.
+   ============================================================ */
+[data-ripple] {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+}
+[data-drift-card][data-open="true"] [data-ripple] {
+  animation: datum-ripple var(--anim-ripple) 1 both;
+}
+@keyframes datum-ripple {
+  from { opacity: 0.5; transform: scale(0.4); }
+  to   { opacity: 0;   transform: scale(1.8); }
+}
+
+/* ============================================================
+   lifecycle chips — ghost -> saturated (chip.activate), active -> muted+dot
+   (chip.complete). Colors are inline; this only times the cross-fade.
+   ============================================================ */
+[data-chip] {
+  transition:
+    background var(--anim-chip-complete),
+    color var(--anim-chip-complete),
+    border-color var(--anim-chip-complete),
+    opacity var(--anim-chip-complete);
+}
+[data-chip="active"] {
+  transition:
+    background var(--anim-chip-activate),
+    color var(--anim-chip-activate),
+    border-color var(--anim-chip-activate);
+}
+
+/* ============================================================
+   mechanical-change strikethrough — users.email drawn left -> right (200ms)
+   ============================================================ */
+[data-old-col] {
+  transition: text-decoration-color 200ms ease, color 200ms ease;
+}
+
+/* ============================================================
+   blast radius — connecting lines draw outward (line.draw 320ms, stagger 80ms)
+   ============================================================ */
+[data-line] {
+  stroke-dasharray: 140;
+  stroke-dashoffset: 140;
+  transition: stroke-dashoffset var(--anim-line-draw), stroke 300ms ease;
+}
+[data-drift-card][data-open="true"] [data-line] {
+  stroke-dashoffset: 0;
+}
+[data-line="chen"] {
+  transition-delay: var(--anim-line-stagger); /* second line staggered 80ms */
+}
+
+/* nodes — color change (node.appear 240ms); resolve to green (node.resolve 360ms) */
+[data-node] {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: fill var(--anim-node-appear), stroke var(--anim-node-appear);
+}
+[data-node-label] {
+  transition: fill var(--anim-node-appear);
+}
+[data-node="ben"][data-node-color="green"],
+[data-node="chen"][data-node-color="green"] {
+  transition: fill var(--anim-node-resolve), stroke var(--anim-node-resolve);
+}
+
+/* the fence punch — the ONE overshoot: scale 1 -> 1.15 -> 1 (node.fence 200ms) */
+[data-node="ben"][data-node-color="red"],
+[data-node="chen"][data-node-color="red"] {
+  animation: datum-fence-punch var(--anim-node-fence) 1 both;
+}
+@keyframes datum-fence-punch {
+  0%   { transform: scale(1); }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* center node — single pulse on birth and on final settle */
+[data-node="center"] {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+[data-drift-card][data-open="true"] [data-node="center"] {
+  animation: datum-center-pulse var(--anim-settle-pulse) 1 both;
+}
+@keyframes datum-center-pulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+/* checkmark fade-in on a reconciled node (check 160ms) */
+[data-node-check] {
+  opacity: 0;
+  transition: opacity var(--anim-check);
+}
+[data-node-color="green"] ~ [data-node-check],
+[data-node-check][data-visible="true"] {
+  opacity: 1;
+}
+
+/* ============================================================
+   settle pulse — one soft green pulse across the whole graphic at reconciled
+   (settle.pulse 520ms ease-out, single)
+   ============================================================ */
+[data-drift-card][data-stage="reconciled"] [data-blast-radius],
+[data-drift-card][data-stage="patched"] [data-blast-radius] {
+  animation: datum-settle var(--anim-settle-pulse) 1 both;
+}
+@keyframes datum-settle {
+  0%   { opacity: 1; }
+  40%  { opacity: 0.55; }
+  100% { opacity: 1; }
+}
+
+/* ============================================================
+   resolution footer — slides up (footer.slide 300ms ease-out)
+   ============================================================ */
+[data-footer] {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-top: 0;
+  transition:
+    max-height var(--anim-footer-slide),
+    opacity var(--anim-footer-slide),
+    margin var(--anim-footer-slide);
+}
+[data-footer][data-visible="true"] {
+  max-height: 64px;
+  opacity: 1;
+  margin-top: 12px;
+}
+
+/* ============================================================
+   TV mode — shared-screen variant. Exaggerate so motion is catchable from ten
+   feet: larger fence punch (scale -> 1.2), larger center pulse, ~1.3x durations.
+   Opt in with [data-tv-mode] on the card root.
+   ============================================================ */
+[data-tv-mode="true"][data-drift-card],
+[data-tv-mode="true"] [data-drift-card] {
+  --anim-card-expand: 546ms cubic-bezier(0.16, 1, 0.3, 1);
+  --anim-epoch-tick: 624ms cubic-bezier(0.65, 0, 0.35, 1);
+  --anim-node-fence: 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --anim-node-resolve: 468ms ease-out;
+  --anim-settle-pulse: 676ms ease-out;
+  --anim-footer-slide: 390ms ease-out;
+}
+[data-tv-mode="true"] [data-node="ben"][data-node-color="red"],
+[data-tv-mode="true"] [data-node="chen"][data-node-color="red"] {
+  animation-name: datum-fence-punch-tv;
+}
+@keyframes datum-fence-punch-tv {
+  0%   { transform: scale(1); }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* ============================================================
+   REDUCED MOTION — the jank insurance. Skip ripple, fence punch, line-draw,
+   settle pulse, center pulse, epoch slide; collapse to instant or simple
+   opacity crossfades for every state change. ALL information (header tint,
+   chip colors + labels, node colors, the count) still conveys the full story
+   without any motion. Flip this on and the demo still reads.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  [data-drift-card],
+  [data-card-head],
+  [data-card-title],
+  [data-card-time],
+  [data-chip],
+  [data-chip="active"],
+  [data-node],
+  [data-node-label],
+  [data-epoch-8],
+  [data-epoch-line],
+  [data-old-col],
+  [data-footer],
+  [data-node-check] {
+    transition: opacity 120ms linear !important;
+  }
+
+  /* no looped / single keyframe motion at all — only the end state remains. */
+  [data-ripple],
+  [data-drift-card][data-open="true"] [data-ripple],
+  [data-drift-card][data-open="true"] [data-node="center"],
+  [data-node="ben"][data-node-color="red"],
+  [data-node="chen"][data-node-color="red"],
+  [data-tv-mode="true"] [data-node="ben"][data-node-color="red"],
+  [data-tv-mode="true"] [data-node="chen"][data-node-color="red"],
+  [data-drift-card][data-stage="reconciled"] [data-blast-radius],
+  [data-drift-card][data-stage="patched"] [data-blast-radius] {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* lines appear drawn instantly rather than animating from offset. */
+  [data-line],
+  [data-line="chen"] {
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+    transition-delay: 0ms !important;
+  }
+
+  /* the ripple is simply absent in reduced mode (it carries no information). */
+  [data-ripple] { display: none !important; }
+
+  /* card open is instant; no max-height ease. */
+  [data-drift-card][data-open="true"] { transition: opacity 120ms linear !important; }
+}
+
+/* honest manual override: [data-force-reduced-motion] mirrors reduced mode for
+   the venue-machine fallback toggle, independent of the OS media query. */
+[data-force-reduced-motion="true"] [data-ripple] { display: none !important; }
+[data-force-reduced-motion="true"] [data-node="ben"][data-node-color="red"],
+[data-force-reduced-motion="true"] [data-node="chen"][data-node-color="red"],
+[data-force-reduced-motion="true"] [data-drift-card][data-open="true"] [data-node="center"],
+[data-force-reduced-motion="true"] [data-blast-radius] {
+  animation: none !important;
+  transform: none !important;
+}
+[data-force-reduced-motion="true"] [data-line] {
+  stroke-dasharray: none !important;
+  stroke-dashoffset: 0 !important;
+}
