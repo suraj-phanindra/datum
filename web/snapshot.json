@@ -1,0 +1,220 @@
+{
+  "registry": {
+    "registry_version": 8,
+    "contracts": [
+      {
+        "id": "api.GET /users/:id",
+        "name": "api.GET /users/:id",
+        "type": "api_shape",
+        "current_version": 3,
+        "current_value": "{\"route\":\"GET /users/:id\"}"
+      },
+      {
+        "id": "api.POST /invites",
+        "name": "api.POST /invites",
+        "type": "api_shape",
+        "current_version": 1,
+        "current_value": "{\"route\":\"POST /invites\"}"
+      },
+      {
+        "id": "db.users",
+        "name": "db.users",
+        "type": "db_schema",
+        "current_version": 8,
+        "current_value": "{\"table\":\"users\",\"columns\":[\"id\",\"contact_email\",\"name\"]}"
+      },
+      {
+        "id": "deps.db-driver",
+        "name": "deps.db-driver",
+        "type": "dep_version",
+        "current_version": 2,
+        "current_value": "{\"dep\":\"db-driver\",\"version\":\"2.0.0\"}"
+      }
+    ]
+  },
+  "deltas": [
+    {
+      "epoch": 8,
+      "contract_id": "db.users",
+      "from_version": 7,
+      "to_version": 8,
+      "author": "asha",
+      "ts": "2026-06-13T14:02:11Z",
+      "why": "phone signups make email the wrong name.",
+      "mechanical_change": {
+        "kind": "rename_column",
+        "table": "users",
+        "from": "email",
+        "to": "contact_email",
+        "migration": "0042"
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": 2,
+      "type": "delta.detected",
+      "payload": {
+        "epoch": 8,
+        "contract_id": "db.users",
+        "from_version": 7,
+        "to_version": 8,
+        "author": "asha",
+        "ts": "2026-06-13T14:02:11Z",
+        "why": "phone signups make email the wrong name.",
+        "mechanical_change": {
+          "kind": "rename_column",
+          "table": "users",
+          "from": "email",
+          "to": "contact_email",
+          "migration": "0042"
+        }
+      },
+      "ts": "2026-06-13T14:02:11Z"
+    },
+    {
+      "id": 3,
+      "type": "write.fenced",
+      "payload": {
+        "session_id": "sess-ben",
+        "human": "ben",
+        "path": "routes/users.ts",
+        "delta_epoch": 8,
+        "contract_id": "db.users",
+        "reason": "db.users.email was renamed to contact_email (migration 0042, asha). This Edit references .email and will break. Re-sync to v8 and use contact_email."
+      },
+      "ts": "2026-06-13T14:02:17Z"
+    },
+    {
+      "id": 4,
+      "type": "advisory.delivered",
+      "payload": {
+        "session_id": "sess-ben",
+        "human": "ben",
+        "recipient": "ben",
+        "file": "routes/users.ts",
+        "advisory": {
+          "recipient": "ben",
+          "session_id": "sess-ben",
+          "file": "routes/users.ts",
+          "delta_ref": {
+            "contract_id": "db.users",
+            "from_version": 7,
+            "to_version": 8,
+            "migration": "0042",
+            "author": "asha"
+          },
+          "severity": "fence",
+          "body": "users.email is now contact_email (migration 0042, asha). Your open diff selects .email in two queries; update both before your next write.",
+          "actions": [
+            "update both .email queries to contact_email",
+            "re-sync to v8"
+          ]
+        }
+      },
+      "ts": "2026-06-13T14:02:18Z"
+    },
+    {
+      "id": 5,
+      "type": "advisory.delivered",
+      "payload": {
+        "session_id": "sess-chen",
+        "human": "chen",
+        "recipient": "chen",
+        "file": "UserCard.tsx",
+        "advisory": {
+          "recipient": "chen",
+          "session_id": "sess-chen",
+          "file": "UserCard.tsx",
+          "delta_ref": {
+            "contract_id": "db.users",
+            "from_version": 7,
+            "to_version": 8,
+            "migration": "0042",
+            "author": "asha"
+          },
+          "severity": "advisory",
+          "body": "UserDTO.email renamed; regenerate types from the API client. UserCard.tsx line 18 reads user.email and will break at runtime.",
+          "actions": [
+            "regenerate DTO types from the API client",
+            "read user.contact_email in UserCard.tsx",
+            "re-sync to v8"
+          ]
+        }
+      },
+      "ts": "2026-06-13T14:02:18Z"
+    },
+    {
+      "id": 6,
+      "type": "reconciled",
+      "payload": {
+        "session_id": "sess-ben",
+        "human": "ben",
+        "contract_id": "db.users",
+        "epoch": 8,
+        "path": "routes/users.ts"
+      },
+      "ts": "2026-06-13T14:03:40Z"
+    },
+    {
+      "id": 7,
+      "type": "reconciled",
+      "payload": {
+        "session_id": "sess-chen",
+        "human": "chen",
+        "contract_id": "db.users",
+        "epoch": 8,
+        "path": "UserCard.tsx"
+      },
+      "ts": "2026-06-13T14:03:40Z"
+    },
+    {
+      "id": 8,
+      "type": "reconciled",
+      "payload": {
+        "workspace": true,
+        "epoch": 8,
+        "sessions": [
+          "sess-ben",
+          "sess-chen"
+        ]
+      },
+      "ts": "2026-06-13T14:03:40Z"
+    },
+    {
+      "id": 9,
+      "type": "spec.pr.opened",
+      "payload": {
+        "pr_number": 14,
+        "url": ".datum-pr/spec-v8.patch",
+        "contract_id": "db.users",
+        "epoch": 8,
+        "ledger_id": 112,
+        "patch_path": "docs/spec.md"
+      },
+      "ts": "2026-06-13T14:04:00Z"
+    }
+  ],
+  "ledger": [
+    {
+      "id": 112,
+      "ts": "2026-06-13T14:02:11Z",
+      "author": "asha",
+      "description": "phone signups make email the wrong name.",
+      "contract_id": "db.users"
+    },
+    {
+      "id": 111,
+      "ts": "2026-06-13T13:41:00Z",
+      "author": "chen",
+      "description": "adopt zod for DTO parsing"
+    },
+    {
+      "id": 110,
+      "ts": "2026-06-13T13:18:00Z",
+      "author": "ben",
+      "description": "invites API returns 202 + job id",
+      "contract_id": "api.POST /invites"
+    }
+  ]
+}

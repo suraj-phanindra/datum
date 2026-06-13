@@ -86,6 +86,28 @@ export async function startTower(opts: StartTowerOptions = {}): Promise<TowerHan
     if (method === "GET" && path === "/tokens.css") {
       return sendText(res, 200, "text/css; charset=utf-8", tokensBundle);
     }
+    // ---- baked snapshot (DEPLOY: tower.js fetches ./snapshot.json on a pure
+    // static host where serve.ts isn't embedding window.__DATUM__). Served from
+    // the file written by demo/seed-snapshot.ts; 404 if absent (never 500). ----
+    if (method === "GET" && path === "/snapshot.json") {
+      try {
+        const body = await readFile(join(__dirname, "snapshot.json"), "utf8");
+        return sendText(res, 200, "application/json; charset=utf-8", body);
+      } catch {
+        return sendText(res, 404, "text/plain", "no snapshot");
+      }
+    }
+    // ---- other shipped static assets in the deploy bundle (drift-card.js, the
+    // animation stylesheet). Served best-effort; 404 if absent. ----
+    if (method === "GET" && (path === "/drift-card.js" || path === "/anim.css")) {
+      try {
+        const body = await readFile(join(__dirname, path.slice(1)), "utf8");
+        const ct = path.endsWith(".css") ? "text/css; charset=utf-8" : "text/javascript; charset=utf-8";
+        return sendText(res, 200, ct, body);
+      } catch {
+        return sendText(res, 404, "text/plain", "not found");
+      }
+    }
 
     // ---- GET / : fetch the snapshot, embed it, serve the hydrated page ----
     if (method === "GET" && (path === "/" || path === "/index.html")) {
@@ -118,11 +140,20 @@ export async function startTower(opts: StartTowerOptions = {}): Promise<TowerHan
 
 // ---------------------------------------------------------------------------
 // snapshot — read-only GETs against the bus. Fail OPEN: if the bus is
-// unreachable, serve the page with an empty snapshot rather than 500'ing (the
-// static markup still renders the seeded end-state; deploy bakes a real one).
+// unreachable, fall back to the baked web/snapshot.json (the seeded v8
+// end-state) so the deployed static page still renders the truth with NO bus
+// process. When the bus IS reachable, behavior is unchanged (live path wins).
+//
+// DEPLOY fallback (scoped, behind a flag — RECONCILIATION: tower owns this file,
+// deploy adds the snapshot branch only): DATUM_SNAPSHOT=1 forces the baked
+// snapshot even if a bus is up (offline/static preview). Otherwise the bus is
+// tried first and the snapshot is used only when the bus is unreachable.
 // ---------------------------------------------------------------------------
 async function fetchSnapshot(busUrl: string): Promise<Snapshot> {
-  const empty: Snapshot = { registry_version: 0, contracts: [], deltas: [], ledger: [] };
+  // forced snapshot mode (static preview / deploy): skip the bus entirely.
+  if (process.env.DATUM_SNAPSHOT === "1") {
+    return (await loadBakedSnapshot()) ?? emptySnapshot();
+  }
   try {
     const [regRes, deltaRes] = await Promise.all([
       fetch(`${busUrl}/registry`),
@@ -139,7 +170,39 @@ async function fetchSnapshot(busUrl: string): Promise<Snapshot> {
       ledger: [],
     };
   } catch {
-    return empty;
+    // bus unreachable: hydrate from the baked snapshot if present, else empty.
+    return (await loadBakedSnapshot()) ?? emptySnapshot();
+  }
+}
+
+function emptySnapshot(): Snapshot {
+  return { registry_version: 0, contracts: [], deltas: [], ledger: [] };
+}
+
+/**
+ * Load + flatten web/snapshot.json (produced by demo/seed-snapshot.ts) into the
+ * window.__DATUM__ shape the page hydrates from. The file nests the registry
+ * under `registry`; the embedded snapshot is flat ({ registry_version,
+ * contracts, deltas, ledger }). Returns null if the file is absent/malformed so
+ * the caller falls back to an empty snapshot (never 500s — read-only viewer).
+ */
+async function loadBakedSnapshot(): Promise<Snapshot | null> {
+  try {
+    const raw = await readFile(join(__dirname, "snapshot.json"), "utf8");
+    const j = JSON.parse(raw) as {
+      registry?: { registry_version?: number; contracts?: unknown[] };
+      deltas?: unknown[];
+      ledger?: unknown[];
+    };
+    const reg = j.registry ?? {};
+    return {
+      registry_version: typeof reg.registry_version === "number" ? reg.registry_version : 0,
+      contracts: Array.isArray(reg.contracts) ? reg.contracts : [],
+      deltas: Array.isArray(j.deltas) ? j.deltas : [],
+      ledger: Array.isArray(j.ledger) ? j.ledger : [],
+    };
+  } catch {
+    return null;
   }
 }
 

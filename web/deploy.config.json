@@ -1,0 +1,34 @@
+{
+  "$comment": "deploy config for the read-only datum tower (feature #8 / deploy PRD). The deployable artifact is a STATIC bundle: the files listed in `assets` are published to any static host, NO node server required. When no live bus is reachable, the page hydrates from snapshot.json (the seeded v8 end-state baked by demo/seed-snapshot.ts). If a live DATUM_BUS_URL is configured, the same page upgrades to live /stream SSE.",
+  "name": "datum-tower",
+  "description": "Static read-only tower: shows the workspace registry at v8 with no bus process.",
+  "entry": "index.html",
+  "assets": [
+    "index.html",
+    "tower.js",
+    "drift-card.js",
+    "tokens.css",
+    "tokens-shim.css",
+    "anim.css",
+    "snapshot.json"
+  ],
+  "fonts": [],
+  "snapshot": "snapshot.json",
+  "regenerate": "node demo/seed-snapshot.ts",
+  "static": true,
+  "node_server_required": false,
+  "host": {
+    "$comment": "Pick one and freeze before recording (deploy PRD open question). Cloudflare Pages chosen: pure static, global edge, zero node runtime needed for the snapshot path. Swap `provider`/`project` for your account.",
+    "provider": "cloudflare-pages",
+    "project": "datum-tower",
+    "url": "https://datum-tower.pages.dev",
+    "publish_dir": "web",
+    "build_command": "node demo/seed-snapshot.ts",
+    "alternatives": ["vercel", "railway", "github-pages"]
+  },
+  "live_bus": {
+    "$comment": "Optional: set DATUM_BUS_URL (build-time env for serve.ts, or a runtime proxy) to upgrade the deployed page from the static snapshot to live SSE. SSE over the static host may not be allowed (deploy PRD risk) — ship snapshot-only on the live URL and demo live SSE locally.",
+    "env": "DATUM_BUS_URL",
+    "stream_path": "/stream"
+  }
+}

@@ -319,9 +319,47 @@
     onEvent: onEvent, // (type, handler) — animation router hook for task #8
     routeEvent: routeEvent, // exposed for tests / replay drivers
     renderAll: renderAll,
+    hydrateFromSnapshot: hydrateFromSnapshot, // exposed for the static fallback
   };
 
-  // hydrate the static markup from the embedded snapshot, then go live.
-  renderAll();
-  connect();
+  // DEPLOY fallback (scoped — existing live-bus + SSE behavior unchanged): on a
+  // pure static host (no node server to embed window.__DATUM__), fetch the baked
+  // ./snapshot.json and hydrate from it, THEN render + go live. When the embed IS
+  // present (serve.ts live or snapshot mode), this branch is skipped entirely.
+  function hydrateFromSnapshot(j) {
+    if (!j) return;
+    // snapshot.json nests the registry; flatten into the window.__DATUM__ shape.
+    var reg = j.registry || {};
+    if (typeof reg.registry_version === "number") state.registryVersion = reg.registry_version;
+    if (Array.isArray(reg.contracts)) state.contracts = reg.contracts.slice();
+    if (Array.isArray(j.deltas)) state.deltas = j.deltas.slice();
+    if (Array.isArray(j.ledger)) state.ledger = j.ledger.slice();
+  }
+
+  function bootstrap() {
+    var haveEmbed = window.__DATUM__ && typeof window.__DATUM__.registry_version === "number";
+    if (haveEmbed || typeof fetch === "undefined") {
+      // embedded (live/snapshot serve.ts) or non-fetch env: hydrate + go live now.
+      renderAll();
+      connect();
+      return;
+    }
+    // pure static host: pull the baked snapshot, then render + go live.
+    fetch("./snapshot.json")
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (j) {
+        hydrateFromSnapshot(j);
+      })
+      .catch(function () {
+        /* fail quiet — the static markup already shows the seeded end-state */
+      })
+      .then(function () {
+        renderAll();
+        connect();
+      });
+  }
+
+  bootstrap();
 })();
