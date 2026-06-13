@@ -146,6 +146,9 @@ export function datumSettingsBlock(): Partial<Settings> {
       SessionStart: [{ hooks: [nodeHook("hooks/datum-join.ts")] }],
       PostToolUse: [{ matcher: "Edit|Write|MultiEdit", hooks: [nodeHook("hooks/datum-claim.ts")] }],
       PreToolUse: [{ matcher: "Edit|Write|MultiEdit", hooks: [nodeHook("hooks/datum-fence.ts")] }],
+      // Stop guard (stretch, P3): refuse "done" while an unacknowledged delta
+      // intersects this session's scope. Blocks locally only — emits NO bus event.
+      Stop: [{ hooks: [nodeHook("hooks/datum-guard.ts")] }],
     },
     mcpServers: {
       datum: { command: "node", args: [`${PROJECT_DIR}/server/mcp.ts`] },
