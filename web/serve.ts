@@ -112,7 +112,7 @@ export async function startTower(opts: StartTowerOptions = {}): Promise<TowerHan
     // ---- GET / : fetch the snapshot, embed it, serve the hydrated page ----
     if (method === "GET" && (path === "/" || path === "/index.html")) {
       const snapshot = await fetchSnapshot(busUrl);
-      const html = embedSnapshot(indexHtml, snapshot);
+      const html = embedSnapshot(indexHtml, snapshot, snapshot.live);
       return sendText(res, 200, "text/html; charset=utf-8", html);
     }
 
@@ -149,10 +149,10 @@ export async function startTower(opts: StartTowerOptions = {}): Promise<TowerHan
 // snapshot even if a bus is up (offline/static preview). Otherwise the bus is
 // tried first and the snapshot is used only when the bus is unreachable.
 // ---------------------------------------------------------------------------
-async function fetchSnapshot(busUrl: string): Promise<Snapshot> {
+async function fetchSnapshot(busUrl: string): Promise<Snapshot & { live: boolean }> {
   // forced snapshot mode (static preview / deploy): skip the bus entirely.
   if (process.env.DATUM_SNAPSHOT === "1") {
-    return (await loadBakedSnapshot()) ?? emptySnapshot();
+    return { ...((await loadBakedSnapshot()) ?? emptySnapshot()), live: false };
   }
   try {
     const [regRes, deltaRes] = await Promise.all([
@@ -168,10 +168,11 @@ async function fetchSnapshot(busUrl: string): Promise<Snapshot> {
       // ledger is not a dedicated bus GET; the static markup carries it and the
       // SSE router refreshes it live. Left empty here on purpose.
       ledger: [],
+      live: true, // hydrated from a LIVE bus -> tower.js may open the SSE channel
     };
   } catch {
     // bus unreachable: hydrate from the baked snapshot if present, else empty.
-    return (await loadBakedSnapshot()) ?? emptySnapshot();
+    return { ...((await loadBakedSnapshot()) ?? emptySnapshot()), live: false };
   }
 }
 
@@ -212,9 +213,12 @@ async function loadBakedSnapshot(): Promise<Snapshot | null> {
  * in the served HTML), and so tower.js hydrates from it. JSON is escaped so a
  * "</script>" in any string can never break out of the inline script.
  */
-function embedSnapshot(html: string, snapshot: Snapshot): string {
+function embedSnapshot(html: string, snapshot: Snapshot, live = false): string {
   const json = JSON.stringify(snapshot).replace(/</g, "\\u003c");
-  const tag = `<script>window.__DATUM__ = ${json};</script>`;
+  // Keep the __DATUM__ tag on its own line ending in `};</script>` (consumers +
+  // tests extract it by that exact pattern). __DATUM_LIVE__ rides in a separate tag.
+  const liveTag = `<script>window.__DATUM_LIVE__ = ${live ? "true" : "false"};</script>`;
+  const tag = `${liveTag}\n  <script>window.__DATUM__ = ${json};</script>`;
   const marker = '<script src="/tower.js"></script>';
   if (html.includes(marker)) {
     return html.replace(marker, tag + "\n  " + marker);

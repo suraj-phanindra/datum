@@ -245,6 +245,10 @@
   var es = null;
   function connect() {
     if (typeof EventSource === "undefined") return;
+    // Only open the live SSE channel when serve.ts hydrated us from a LIVE bus.
+    // On a pure static host (deploy) or baked snapshot mode there is no /stream,
+    // so attempting it would abort with a MIME-type console error.
+    if (!window.__DATUM_LIVE__) return;
     try {
       es = new EventSource("/stream");
     } catch (e) {

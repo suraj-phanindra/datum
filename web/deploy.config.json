@@ -12,7 +12,16 @@
     "anim.css",
     "snapshot.json"
   ],
-  "fonts": [],
+  "fonts": [
+    "assets/fonts/geist-400.woff2",
+    "assets/fonts/geist-500.woff2",
+    "assets/fonts/geist-600.woff2",
+    "assets/fonts/geist-700.woff2",
+    "assets/fonts/geistmono-400.woff2",
+    "assets/fonts/geistmono-500.woff2",
+    "assets/fonts/geistmono-600.woff2",
+    "assets/fonts/geistpixel-square.woff2"
+  ],
   "snapshot": "snapshot.json",
   "regenerate": "node demo/seed-snapshot.ts",
   "static": true,
@@ -22,8 +31,9 @@
     "provider": "cloudflare-pages",
     "project": "datum-tower",
     "url": "https://datum-tower.pages.dev",
-    "publish_dir": "web",
-    "build_command": "node demo/seed-snapshot.ts",
+    "publish_dir": "web/dist",
+    "build_command": "node demo/seed-snapshot.ts && node web/build-static.ts",
+    "deploy_command": "wrangler pages deploy web/dist --project-name=datum-tower --branch=main",
     "alternatives": ["vercel", "railway", "github-pages"]
   },
   "live_bus": {
