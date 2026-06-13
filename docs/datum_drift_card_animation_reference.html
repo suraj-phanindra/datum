@@ -1,0 +1,151 @@
+<h2 class="sr-only">Animated reference of the Datum drift card. A play button fires a contract delta and the card moves through detected, fenced, advised, reconciling, reconciled, and spec-patched stages, with an epoch strip ticking v7 to v8, lifecycle chips activating in sequence, and a blast radius graphic whose two consumer nodes flip from neutral to fenced-red and advised-blue and then to reconciled-green.</h2>
+<div style="display:flex; align-items:center; gap:10px; margin:0.5rem 0 14px;">
+  <button id="fire" style="font-size:13px;">fire delta</button>
+  <button id="reset" style="font-size:13px;">reset</button>
+  <span id="stage" style="font-size:12px; color:var(--color-text-tertiary); font-family:var(--font-mono);">calm</span>
+</div>
+
+<div style="display:flex; align-items:center; gap:6px; margin-bottom:14px;">
+  <span style="font-size:11px; color:var(--color-text-tertiary); font-family:var(--font-mono); flex:none;">epoch</span>
+  <div style="width:8px; height:8px; border-radius:50%; background:var(--color-background-secondary); border:1.5px solid var(--color-border-secondary); flex:none;"></div>
+  <div style="height:1.5px; flex:1; background:var(--color-border-tertiary);"></div>
+  <div style="display:flex; align-items:center; gap:5px; flex:none;">
+    <div id="epoch7dot" style="width:9px; height:9px; border-radius:50%; background:var(--color-background-warning); border:2px solid var(--color-text-warning); transition:all .48s cubic-bezier(.65,0,.35,1);"></div>
+    <span id="epoch7" style="font-size:11px; color:var(--color-text-warning); font-family:var(--font-mono); transition:color .48s;">v7 · live</span>
+  </div>
+  <div id="epochline" style="height:1.5px; flex:1; background:var(--color-border-tertiary); transition:background .48s;"></div>
+  <div id="epoch8wrap" style="display:flex; align-items:center; gap:6px; flex:none; opacity:0; transform:translateX(-6px); transition:opacity .48s,transform .48s;">
+    <div style="width:12px; height:12px; border-radius:50%; background:var(--color-background-warning); border:2px solid var(--color-text-warning);"></div>
+    <span style="font-size:12px; color:var(--color-text-warning); font-family:var(--font-mono); font-weight:500;">v8 · live · 14:02</span>
+  </div>
+</div>
+
+<div id="feedrow" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); background:var(--color-background-primary);">
+  <span style="font-family:var(--font-mono); font-size:12px; color:var(--color-text-secondary);"><span id="feeddot" style="display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--color-text-tertiary); margin-right:8px; transition:background .3s;"></span>db.users</span>
+  <span style="font-size:11px; color:var(--color-text-tertiary); font-family:var(--font-mono);">calm · synced to v7</span>
+</div>
+
+<div id="card" style="max-height:0; opacity:0; overflow:hidden; border:0.5px solid var(--color-border-secondary); border-radius:var(--border-radius-lg); background:var(--color-background-primary); transition:max-height .42s cubic-bezier(.16,1,.3,1),opacity .42s,margin .42s; margin-top:0;">
+  <div id="cardhead" style="padding:10px 16px; display:flex; justify-content:space-between; align-items:center; background:var(--color-background-warning); transition:background .3s;">
+    <span id="cardtitle" style="font-size:13px; font-weight:500; color:var(--color-text-warning); transition:color .3s;"><i class="ti ti-circle-dot" style="font-size:14px; vertical-align:-2px;" aria-hidden="true"></i> contract delta · db.users v7 → v8</span>
+    <span id="cardtime" style="font-size:11px; font-family:var(--font-mono); color:var(--color-text-warning); transition:color .3s;">14:02:11</span>
+  </div>
+  <div style="padding:12px 16px;">
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+      <span class="chip" id="c-det" style="font-size:11px; padding:2px 8px; border-radius:9px; border:0.5px solid var(--color-border-tertiary); color:var(--color-text-tertiary); transition:all .26s;"><i class="ti ti-checks" style="font-size:11px;" aria-hidden="true"></i> detected 0.3s</span>
+      <span class="chip" id="c-fen" style="font-size:11px; padding:2px 8px; border-radius:9px; border:0.5px solid var(--color-border-tertiary); color:var(--color-text-tertiary); transition:all .26s;"><i class="ti ti-lock" style="font-size:11px;" aria-hidden="true"></i> fenced 5.8s</span>
+      <span class="chip" id="c-adv" style="font-size:11px; padding:2px 8px; border-radius:9px; border:0.5px solid var(--color-border-tertiary); color:var(--color-text-tertiary); transition:all .26s;"><i class="ti ti-bell" style="font-size:11px;" aria-hidden="true"></i> advised 6.4s</span>
+      <span class="chip" id="c-rec" style="font-size:11px; padding:2px 8px; border-radius:9px; border:0.5px solid var(--color-border-tertiary); color:var(--color-text-tertiary); transition:all .26s;"><i class="ti ti-check" style="font-size:11px;" aria-hidden="true"></i> <span id="reclabel">reconciling 0/2</span></span>
+      <span class="chip" id="c-pr" style="font-size:11px; padding:2px 8px; border-radius:9px; border:0.5px solid var(--color-border-tertiary); color:var(--color-text-tertiary); opacity:.5; transition:all .26s;"><i class="ti ti-git-pull-request" style="font-size:11px;" aria-hidden="true"></i> spec PR open</span>
+    </div>
+    <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 12px; line-height:1.55;">asha: "phone signups make email the wrong name." <span style="font-family:var(--font-mono);"><span id="oldcol" style="transition:all .25s;">users.email</span> → contact_email</span>, migration 0042.</p>
+    <svg viewBox="0 0 380 120" style="width:100%; display:block;" role="img" aria-label="Blast radius from db.users to two consumers">
+      <line id="lben" x1="92" y1="60" x2="214" y2="30" stroke="var(--color-border-secondary)" stroke-width="1.5" stroke-dasharray="140" stroke-dashoffset="140" style="transition:stroke-dashoffset .32s ease-out,stroke .3s;"/>
+      <line id="lchen" x1="92" y1="60" x2="214" y2="92" stroke="var(--color-border-secondary)" stroke-width="1.5" stroke-dasharray="140" stroke-dashoffset="140" style="transition:stroke-dashoffset .32s ease-out .08s,stroke .3s;"/>
+      <circle id="ncenter" cx="60" cy="60" r="15" fill="var(--color-background-warning)" stroke="var(--color-text-warning)" stroke-width="2" style="transform-box:fill-box; transform-origin:center; transition:transform .5s;"/>
+      <text x="60" y="90" text-anchor="middle" font-size="11" fill="var(--color-text-primary)" font-family="var(--font-mono)">db.users v8</text>
+      <circle id="nben" cx="224" cy="30" r="8" fill="var(--color-background-secondary)" stroke="var(--color-border-secondary)" stroke-width="1.5" style="transform-box:fill-box; transform-origin:center; transition:transform .2s cubic-bezier(.34,1.56,.64,1),fill .36s,stroke .36s;"/>
+      <text x="240" y="28" font-size="11.5" fill="var(--color-text-primary)" font-family="var(--font-mono)">ben · routes/users.ts</text>
+      <text id="tben" x="240" y="42" font-size="11" fill="var(--color-text-tertiary)" style="transition:fill .3s;">building</text>
+      <circle id="nchen" cx="224" cy="92" r="8" fill="var(--color-background-secondary)" stroke="var(--color-border-secondary)" stroke-width="1.5" style="transform-box:fill-box; transform-origin:center; transition:fill .36s,stroke .36s;"/>
+      <text x="240" y="90" font-size="11.5" fill="var(--color-text-primary)" font-family="var(--font-mono)">chen · UserCard.tsx</text>
+      <text id="tchen" x="240" y="104" font-size="11" fill="var(--color-text-tertiary)" style="transition:fill .3s;">building</text>
+    </svg>
+    <div id="footer" style="max-height:0; opacity:0; overflow:hidden; transition:max-height .3s ease-out,opacity .3s,margin .3s; margin-top:0;">
+      <div style="display:flex; align-items:center; gap:8px; padding-top:10px; border-top:0.5px solid var(--color-border-tertiary);">
+        <i class="ti ti-git-pull-request" style="font-size:14px; color:var(--color-text-info);" aria-hidden="true"></i>
+        <span style="font-size:11px; color:var(--color-text-info); font-family:var(--font-mono);">spec PR #14 · docs/spec.md · ledger #112</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var T=[], running=false;
+  var $=function(id){return document.getElementById(id);};
+  function setChip(el,kind){
+    var map={amber:['--color-background-warning','--color-text-warning'],red:['--color-background-danger','--color-text-danger'],blue:['--color-background-info','--color-text-info'],green:['--color-background-success','--color-text-success']};
+    var c=map[kind];
+    el.style.background='var('+c[0]+')'; el.style.color='var('+c[1]+')'; el.style.borderColor='transparent'; el.style.opacity='1';
+  }
+  function muteChip(el,dot){
+    el.style.background='transparent'; el.style.color='var(--color-text-tertiary)'; el.style.borderColor='var(--color-border-tertiary)'; el.style.opacity='1';
+    el.style.borderLeft='2px solid var('+dot+')';
+  }
+  function headTint(bg,fg){
+    $('cardhead').style.background='var('+bg+')';
+    $('cardtitle').style.color='var('+fg+')'; $('cardtime').style.color='var('+fg+')';
+  }
+  function node(el,fill,stroke){ el.setAttribute('fill','var('+fill+')'); el.setAttribute('stroke','var('+stroke+')'); }
+  function clearAll(){ T.forEach(function(t){clearTimeout(t);}); T=[]; }
+  function reset(){
+    clearAll(); running=false; $('stage').textContent='calm';
+    $('card').style.maxHeight='0'; $('card').style.opacity='0'; $('card').style.marginTop='0';
+    $('feedrow').style.display='flex'; $('feeddot').style.background='var(--color-text-tertiary)';
+    $('epoch8wrap').style.opacity='0'; $('epoch8wrap').style.transform='translateX(-6px)';
+    $('epoch7').textContent='v7 · live'; $('epochline').style.background='var(--color-border-tertiary)';
+    ['c-det','c-fen','c-adv','c-rec'].forEach(function(id){var e=$(id); e.style.background='transparent'; e.style.color='var(--color-text-tertiary)'; e.style.borderColor='var(--color-border-tertiary)'; e.style.borderLeft=''; e.style.opacity='1';});
+    $('c-pr').style.background='transparent'; $('c-pr').style.color='var(--color-text-tertiary)'; $('c-pr').style.borderColor='var(--color-border-tertiary)'; $('c-pr').style.borderLeft=''; $('c-pr').style.opacity='.5';
+    $('reclabel').textContent='reconciling 0/2';
+    headTint('--color-background-warning','--color-text-warning');
+    $('oldcol').style.textDecoration='none'; $('oldcol').style.color='inherit';
+    $('lben').style.strokeDashoffset='140'; $('lchen').style.strokeDashoffset='140';
+    $('lben').setAttribute('stroke','var(--color-border-secondary)'); $('lchen').setAttribute('stroke','var(--color-border-secondary)');
+    node($('nben'),'--color-background-secondary','--color-border-secondary');
+    node($('nchen'),'--color-background-secondary','--color-border-secondary');
+    $('tben').textContent='building'; $('tben').setAttribute('fill','var(--color-text-tertiary)');
+    $('tchen').textContent='building'; $('tchen').setAttribute('fill','var(--color-text-tertiary)');
+    $('footer').style.maxHeight='0'; $('footer').style.opacity='0'; $('footer').style.marginTop='0';
+  }
+  function at(ms,fn){ T.push(setTimeout(fn,ms)); }
+  function fire(){
+    if(running) return; reset(); running=true;
+    at(50,function(){
+      $('stage').textContent='detected';
+      $('feedrow').style.display='none';
+      $('card').style.maxHeight='520px'; $('card').style.opacity='1'; $('card').style.marginTop='12px';
+      $('epoch7').textContent='v7 · 12:55'; $('epoch7').style.color='var(--color-text-tertiary)'; $('epoch7dot').style.background='var(--color-background-secondary)'; $('epoch7dot').style.borderColor='var(--color-border-secondary)';
+      $('epoch8wrap').style.opacity='1'; $('epoch8wrap').style.transform='translateX(0)';
+      $('epochline').style.background='var(--color-text-warning)';
+      setChip($('c-det'),'amber');
+      $('lben').style.strokeDashoffset='0'; $('lchen').style.strokeDashoffset='0';
+      var n=$('ncenter'); n.style.transform='scale(1.18)'; setTimeout(function(){n.style.transform='scale(1)';},260);
+    });
+    at(1200,function(){
+      $('stage').textContent='fenced'; headTint('--color-background-danger','--color-text-danger');
+      muteChip($('c-det'),'--color-text-warning'); setChip($('c-fen'),'red');
+      node($('nben'),'--color-background-danger','--color-text-danger'); $('tben').textContent='fenced'; $('tben').setAttribute('fill','var(--color-text-danger)');
+      $('lben').setAttribute('stroke','var(--color-text-danger)');
+      var b=$('nben'); b.style.transform='scale(1.25)'; setTimeout(function(){b.style.transform='scale(1)';},200);
+      $('oldcol').style.textDecoration='line-through'; $('oldcol').style.color='var(--color-text-tertiary)';
+    });
+    at(2000,function(){
+      $('stage').textContent='advised'; headTint('--color-background-secondary','--color-text-secondary');
+      muteChip($('c-fen'),'--color-text-danger'); setChip($('c-adv'),'blue');
+      node($('nchen'),'--color-background-info','--color-text-info'); $('tchen').textContent='advised'; $('tchen').setAttribute('fill','var(--color-text-info)');
+      $('lchen').setAttribute('stroke','var(--color-text-info)');
+    });
+    at(3500,function(){
+      $('stage').textContent='reconciling'; setChip($('c-rec'),'green'); $('reclabel').textContent='reconciling 1/2';
+      node($('nben'),'--color-background-success','--color-text-success'); $('tben').textContent='reconciled'; $('tben').setAttribute('fill','var(--color-text-success)');
+      $('lben').setAttribute('stroke','var(--color-text-success)');
+    });
+    at(4800,function(){
+      $('stage').textContent='reconciled'; $('reclabel').textContent='reconciled 2/2';
+      node($('nchen'),'--color-background-success','--color-text-success'); $('tchen').textContent='reconciled'; $('tchen').setAttribute('fill','var(--color-text-success)');
+      $('lchen').setAttribute('stroke','var(--color-text-success)');
+      headTint('--color-background-success','--color-text-success');
+      var n=$('ncenter'); n.style.transform='scale(1.14)'; setTimeout(function(){n.style.transform='scale(1)';},520);
+    });
+    at(6200,function(){
+      $('stage').textContent='patched'; setChip($('c-pr'),'blue');
+      $('footer').style.maxHeight='60px'; $('footer').style.opacity='1'; $('footer').style.marginTop='12px';
+    });
+    at(7600,function(){ running=false; $('stage').textContent='patched · arc complete'; });
+  }
+  $('fire').addEventListener('click',fire);
+  $('reset').addEventListener('click',reset);
+  at(600,fire);
+})();
+</script>

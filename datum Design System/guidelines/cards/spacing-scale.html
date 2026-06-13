@@ -1,0 +1,26 @@
+<!-- @dsCard group="Spacing" viewport="700x160" name="Spacing scale" subtitle="4px base grid — compact dev-tool density" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:22px 26px;
+         display:flex; gap:18px; align-items:flex-end; flex-wrap:wrap; }
+  .u { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .bar { background:var(--signal-amber-tint); border:1px solid var(--signal-amber-line); border-radius:2px; }
+  .u code { font-family:var(--font-mono); font-size:10.5px; color:var(--text-tertiary); }
+</style>
+</head>
+<body>
+  <div class="u"><div class="bar" style="width:4px;height:4px"></div><code>1·2</code></div>
+  <div class="u"><div class="bar" style="width:8px;height:8px"></div><code>4·8</code></div>
+  <div class="u"><div class="bar" style="width:12px;height:12px"></div><code>5·12</code></div>
+  <div class="u"><div class="bar" style="width:16px;height:16px"></div><code>6·16</code></div>
+  <div class="u"><div class="bar" style="width:24px;height:24px"></div><code>8·24</code></div>
+  <div class="u"><div class="bar" style="width:32px;height:32px"></div><code>9·32</code></div>
+  <div class="u"><div class="bar" style="width:40px;height:40px"></div><code>10·40</code></div>
+  <div class="u"><div class="bar" style="width:56px;height:56px"></div><code>12·56</code></div>
+</body>
+</html>

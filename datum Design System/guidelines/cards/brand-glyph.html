@@ -1,0 +1,38 @@
+<!-- @dsCard group="Brand" viewport="700x230" name="Benchmark glyph" subtitle="The mark is a surveyor's datum — fixed reference surface" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:24px 26px;
+         display:flex; gap:30px; align-items:center; }
+  .frame { position:relative; width:120px; height:120px; flex:none;
+           border:1px dashed var(--border-strong); border-radius:var(--radius-sm); }
+  .frame svg { position:absolute; inset:22px; width:auto; height:auto; color:var(--text-primary); }
+  .frame .pad { position:absolute; inset:0; }
+  .frame .pad span { position:absolute; font-family:var(--font-mono); font-size:9px; color:var(--text-tertiary); }
+  .note h4 { margin:0 0 8px; font-size:15px; font-weight:600; }
+  .note p { margin:0 0 7px; font-size:12.5px; color:var(--text-secondary); line-height:1.45; max-width:380px; }
+  .note code { font-family:var(--font-mono); color:var(--signal-amber); font-size:12px; }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <svg viewBox="0 0 48 48" fill="none" style="inset:22px;position:absolute;width:76px;height:76px" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="12.5" stroke="currentColor" stroke-width="2"/>
+      <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="24" y1="5" x2="24" y2="20.4"/><line x1="24" y1="27.6" x2="24" y2="43"/>
+        <line x1="5" y1="24" x2="20.4" y2="24"/><line x1="27.6" y1="24" x2="43" y2="24"/>
+      </g>
+      <circle cx="24" cy="24" r="2.6" fill="#F5A623"/>
+    </svg>
+  </div>
+  <div class="note">
+    <h4>Clearspace = ½ the mark height on every side.</h4>
+    <p>The amber center dot is the only color in the mark — it is the live datum point. Strokes are always 1px-optical (2 units at 48), caps rounded.</p>
+    <p>Microcopy may borrow surveying language: <code>re-baselining</code>, <code>off datum by 2 versions</code>, <code>synced to v8</code>. Never skeuomorphic.</p>
+  </div>
+</body>
+</html>

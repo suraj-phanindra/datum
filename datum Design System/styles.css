@@ -1,0 +1,12 @@
+/* ============================================================
+   datum design system — global entry point.
+   Consumers link THIS file. It is an @import manifest only;
+   never add rules here directly. Everything reachable from
+   these imports ships to consumers.
+   ============================================================ */
+
+@import "tokens/fonts.css";
+@import "tokens/colors.css";
+@import "tokens/typography.css";
+@import "tokens/spacing.css";
+@import "tokens/base.css";

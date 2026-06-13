@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Tower screen" description="datum web tower — drift state with epoch spine, drift card, registry & ledger rail" -->
+<helmet>
+  <script src="./ds-base.js"></script>
+  <style>
+    body { margin:0; background:var(--bg-base); color:var(--text-primary); font-family:var(--font-sans); }
+  </style>
+</helmet>
+
+<div style="min-height:100vh; background:var(--bg-base); display:flex; flex-direction:column;">
+
+  <!-- top bar -->
+  <header style="height:52px; display:flex; align-items:center; gap:14px; padding:0 20px; border-bottom:1px solid var(--border-hairline);">
+    <span style="color:var(--text-primary); display:inline-flex;">
+      <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="12.5" stroke="currentColor" stroke-width="2"></circle>
+        <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="24" y1="5" x2="24" y2="20.4"></line><line x1="24" y1="27.6" x2="24" y2="43"></line>
+          <line x1="5" y1="24" x2="20.4" y2="24"></line><line x1="27.6" y1="24" x2="43" y2="24"></line>
+        </g>
+        <circle cx="24" cy="24" r="2.6" fill="#F5A623"></circle>
+      </svg>
+    </span>
+    <span style="font-family:var(--font-mono); font-size:13px; color:var(--text-secondary);">acme/workspaces</span>
+    <span style="color:var(--text-tertiary);">/</span>
+    <span style="font-size:13px; font-weight:500;">workspace invites</span>
+    <span style="margin-left:auto;">
+      <x-import component-from-global-scope="DatumDesignSystem_b409bf.Badge" signal="red" live="{{ true }}" hint-size="120px,24px">drift · 1 reconciling</x-import>
+    </span>
+  </header>
+
+  <!-- epoch spine -->
+  <div style="display:flex; align-items:center; gap:16px; padding:11px 20px; border-bottom:1px solid var(--border-hairline); background:var(--bg-inset);">
+    <span class="eyebrow">epoch</span>
+    <x-import component-from-global-scope="DatumDesignSystem_b409bf.EpochStrip" versions="{{ epoch }}" show-times="{{ true }}" hint-size="360px,42px"></x-import>
+    <span style="margin-left:auto; font-family:var(--font-mono); font-size:11px; color:var(--signal-amber);">live · v8</span>
+  </div>
+
+  <!-- body -->
+  <div style="flex:1; display:grid; grid-template-columns:minmax(0,1fr) 372px; gap:18px; padding:20px; align-items:start;">
+
+    <main style="display:flex; flex-direction:column; gap:14px;">
+      <div style="display:flex; align-items:center;">
+        <h1 style="font-size:20px; font-weight:600; letter-spacing:-0.01em; margin:0;">tower</h1>
+      </div>
+      <x-import component-from-global-scope="DatumDesignSystem_b409bf.DriftCard"
+        contract="db.users" from-version="v7" to-version="v8" timestamp="14:02:11" severity="red"
+        lifecycle="{{ lifecycle }}" quote="{{ quote }}" change="{{ change }}" nodes="{{ nodes }}"
+        pr="{{ pr }}" ledger="{{ ledgerLink }}" default-open="{{ true }}"
+        hint-size="100%,520px"></x-import>
+    </main>
+
+    <aside style="display:flex; flex-direction:column; gap:16px;">
+      <div style="border:1px solid var(--border-hairline); border-radius:var(--radius-md); background:var(--surface-card); overflow:hidden;">
+        <div style="padding:12px 14px; border-bottom:1px solid var(--border-hairline);">
+          <div class="eyebrow" style="margin-bottom:2px;">current truth</div>
+          <div style="font-size:14px; font-weight:600;">registry</div>
+        </div>
+        <sc-for list="{{ contracts }}" as="c" hint-placeholder-count="4">
+          <x-import component-from-global-scope="DatumDesignSystem_b409bf.ContractRow"
+            name="{{ c.name }}" version="{{ c.version }}" live="{{ c.live }}" drift="{{ c.drift }}"
+            sessions="{{ c.sessions }}" hint-size="100%,40px"></x-import>
+        </sc-for>
+      </div>
+
+      <div style="border:1px solid var(--border-hairline); border-radius:var(--radius-md); background:var(--surface-card); overflow:hidden;">
+        <div style="padding:12px 14px; border-bottom:1px solid var(--border-hairline);">
+          <div class="eyebrow" style="margin-bottom:2px;">decision history</div>
+          <div style="font-size:14px; font-weight:600;">ledger</div>
+        </div>
+        <sc-for list="{{ ledgerRows }}" as="l" hint-placeholder-count="4">
+          <x-import component-from-global-scope="DatumDesignSystem_b409bf.LedgerEntry"
+            id="{{ l.id }}" time="{{ l.time }}" who="{{ l.who }}" summary="{{ l.summary }}"
+            hint-size="100%,36px"></x-import>
+        </sc-for>
+      </div>
+    </aside>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1360, &quot;height&quot;: 840}}">
+class Component extends DCLogic {
+  renderVals() {
+    const sessions = {
+      as: { initials: "as", name: "asha", active: true },
+      be: { initials: "be", name: "ben" },
+      ch: { initials: "ch", name: "chen" },
+    };
+    return {
+      epoch: [
+        { v: "v5", time: "11:20", state: "past" },
+        { v: "v6", time: "12:08", state: "past" },
+        { v: "v7", time: "12:55", state: "past" },
+        { v: "v8", time: "14:02", state: "live" },
+      ],
+      lifecycle: [
+        { stage: "detected", elapsed: "0.3s" },
+        { stage: "fenced", elapsed: "5.8s" },
+        { stage: "advised", elapsed: "6.4s" },
+        { stage: "reconciled", elapsed: "2/2" },
+      ],
+      quote: { who: "asha", text: "phone signups make email the wrong name." },
+      change: { from: "users.email", to: "contact_email", migration: "migration 0042" },
+      nodes: [
+        { initials: "be", label: "routes/users.ts", status: "reconciled" },
+        { initials: "ch", label: "UserCard.tsx", status: "reconciled" },
+      ],
+      pr: { label: "spec PR #14" },
+      ledgerLink: { label: "ledger #112" },
+      contracts: [
+        { name: "db.users", version: "v8", live: true, drift: true, sessions: [sessions.as, sessions.be] },
+        { name: "api.GET /users/:id", version: "v3", live: false, drift: false, sessions: [sessions.be, sessions.ch] },
+        { name: "api.POST /invites", version: "v1", live: false, drift: false, sessions: [sessions.be] },
+        { name: "deps.db-driver", version: "v2", live: false, drift: false, sessions: [sessions.as] },
+      ],
+      ledgerRows: [
+        { id: 112, time: "14:02", who: "asha", summary: "rename users.email · phone signups landing" },
+        { id: 111, time: "13:41", who: "chen", summary: "adopt zod for DTO parsing" },
+        { id: 110, time: "13:18", who: "ben", summary: "invites API returns 202 + job id" },
+        { id: 109, time: "12:55", who: "asha", summary: "add users.last_seen_at" },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

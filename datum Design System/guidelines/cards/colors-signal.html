@@ -1,0 +1,31 @@
+<!-- @dsCard group="Colors" viewport="700x215" name="Signal hues" subtitle="Semantic & scarce — each hue means exactly one thing" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:20px 26px; }
+  .row { display:flex; gap:10px; }
+  .sig { flex:1; border:var(--border); border-radius:var(--radius-md); overflow:hidden; background:var(--surface-card); }
+  .bar { height:46px; }
+  .meta { padding:10px 12px; }
+  .meta .dot { display:flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:12px; }
+  .meta code { font-family:var(--font-mono); font-size:10.5px; color:var(--text-tertiary); display:block; margin-top:5px; }
+  .meta .use { font-size:11px; color:var(--text-secondary); margin-top:7px; line-height:1.35; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sig"><div class="bar" style="background:#F5A623"></div><div class="meta">
+      <div class="dot">amber</div><code>#F5A623</code><div class="use">contract-surface activity · live epoch</div></div></div>
+    <div class="sig"><div class="bar" style="background:#E5484D"></div><div class="meta">
+      <div class="dot">red</div><code>#E5484D</code><div class="use">breaking delta · fenced write</div></div></div>
+    <div class="sig"><div class="bar" style="background:#4D8DF6"></div><div class="meta">
+      <div class="dot">blue</div><code>#4D8DF6</code><div class="use">advisory</div></div></div>
+    <div class="sig"><div class="bar" style="background:#2FA46C"></div><div class="meta">
+      <div class="dot">green</div><code>#2FA46C</code><div class="use">reconciled · synced</div></div></div>
+  </div>
+</body>
+</html>

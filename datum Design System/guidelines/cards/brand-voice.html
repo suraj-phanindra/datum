@@ -1,0 +1,34 @@
+<!-- @dsCard group="Brand" viewport="700x220" name="Voice & microcopy" subtitle="terse · technical · lowercase product nouns" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:20px 26px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; }
+  .do, .dont { display:flex; gap:9px; align-items:flex-start; font-size:12.5px; line-height:1.4; }
+  .mk { font-family:var(--font-mono); font-size:11px; flex:none; margin-top:1px; }
+  .do .mk { color:var(--signal-green); }
+  .dont .mk { color:var(--signal-red); }
+  .dont span { color:var(--text-tertiary); text-decoration:line-through; }
+  h4 { margin:0 0 12px; font-size:11px; font-family:var(--font-mono); letter-spacing:.05em;
+       text-transform:uppercase; color:var(--text-tertiary); }
+  .voc { color:var(--signal-amber); }
+</style>
+</head>
+<body>
+  <h4>terse, technical, lowercase product nouns</h4>
+  <div class="grid">
+    <div class="do"><span class="mk">do</span>db.users re-baselined to <span class="voc">v8</span></div>
+    <div class="dont"><span class="mk">no</span><span>Database Schema Successfully Updated!</span></div>
+    <div class="do"><span class="mk">do</span>ben's write fenced · stale by 1 epoch</div>
+    <div class="dont"><span class="mk">no</span><span>Oops! Your changes were blocked 🚫</span></div>
+    <div class="do"><span class="mk">do</span>3 agents live · last delta 4m ago</div>
+    <div class="dont"><span class="mk">no</span><span>You have 3 active collaborators online</span></div>
+    <div class="do"><span class="mk">do</span>advisory delivered to chen · UserCard.tsx</div>
+    <div class="dont"><span class="mk">no</span><span>We notified your teammate about this change</span></div>
+  </div>
+</body>
+</html>

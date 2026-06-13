@@ -1,0 +1,10 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="datum benchmark mark monochrome">
+  <circle cx="24" cy="24" r="12.5" stroke="currentColor" stroke-width="2"></circle>
+  <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <line x1="24" y1="5" x2="24" y2="20.4"></line>
+    <line x1="24" y1="27.6" x2="24" y2="43"></line>
+    <line x1="5" y1="24" x2="20.4" y2="24"></line>
+    <line x1="27.6" y1="24" x2="43" y2="24"></line>
+  </g>
+  <circle cx="24" cy="24" r="2.6" fill="currentColor"></circle>
+</svg>

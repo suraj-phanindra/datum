@@ -1,0 +1,66 @@
+/* ============================================================
+   datum · webfonts — Geist + Geist Mono (OFL, self-hosted woff2)
+   Official Vercel v1.7.2 builds. License: ../assets/fonts/OFL.txt
+   More weights/italics available in uploads/geist-font-v1.7.2/.
+   ============================================================ */
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/geist-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/geist-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/geist-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/geist-700.woff2") format("woff2");
+}
+
+/* Geist Pixel — display face for MARKETING SURFACES ONLY.
+   Never in product UI chrome, never for identifiers. */
+@font-face {
+  font-family: "Geist Pixel";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/geistpixel-square.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/geistmono-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/geistmono-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/geistmono-600.woff2") format("woff2");
+}

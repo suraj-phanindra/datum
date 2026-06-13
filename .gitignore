@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+*.tsbuildinfo
+
+# datum runtime state (local cache + sqlite)
+.datum/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+coverage/
+
+# os
+.DS_Store
+
+# demo seed repo working git (managed by the demo runner)
+demo/workspace-invites/.git/

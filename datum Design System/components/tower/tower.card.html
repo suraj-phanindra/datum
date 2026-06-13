@@ -1,0 +1,85 @@
+<!-- @dsCard group="Components" viewport="700x520" name="Tower" subtitle="EpochStrip · LifecycleChip · Presence · ContractRow · Ledger" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:22px 24px; }
+  .sect { margin-bottom:20px; }
+  .lbl { font-family:var(--font-mono); font-size:10px; letter-spacing:.07em;
+       text-transform:uppercase; color:var(--text-tertiary); margin-bottom:11px; }
+  .row { display:flex; gap:9px; align-items:center; flex-wrap:wrap; }
+  .panel { border:1px solid var(--border-hairline); border-radius:var(--radius-md);
+           background:var(--surface-card); overflow:hidden; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { EpochStrip, LifecycleChip, PresenceAvatar, PresenceStack, ContractRow, LedgerEntry } = window.DatumDesignSystem_b409bf;
+    const sessions = [
+      { initials:"as", name:"asha", active:true },
+      { initials:"be", name:"ben" },
+      { initials:"ch", name:"chen" },
+    ];
+    function Demo(){
+      return (
+        <React.Fragment>
+          <div className="sect">
+            <div className="lbl">epoch strip · the version spine</div>
+            <EpochStrip versions={[
+              {v:"v5",state:"past"},{v:"v6",state:"past"},{v:"v7",state:"past"},{v:"v8",state:"live"}
+            ]}/>
+          </div>
+          <div className="sect">
+            <div className="lbl">lifecycle chips</div>
+            <div className="row">
+              <LifecycleChip stage="detected" elapsed="0.3s"/>
+              <LifecycleChip stage="fenced" elapsed="5.8s"/>
+              <LifecycleChip stage="advised" elapsed="6.4s"/>
+              <LifecycleChip stage="reconciled" elapsed="2/2"/>
+              <LifecycleChip stage="patched" pending/>
+            </div>
+          </div>
+          <div className="sect">
+            <div className="lbl">presence · sessions parked on a surface</div>
+            <div className="row">
+              <PresenceAvatar initials="as" name="asha" active/>
+              <PresenceAvatar initials="be" name="ben"/>
+              <PresenceStack sessions={sessions} max={3}/>
+            </div>
+          </div>
+          <div className="grid2">
+            <div>
+              <div className="lbl">registry rows</div>
+              <div className="panel">
+                <ContractRow name="db.users" version="v8" live drift sessions={[sessions[0],sessions[1]]}/>
+                <ContractRow name="api.GET /users/:id" version="v3" sessions={[sessions[1],sessions[2]]}/>
+                <ContractRow name="api.POST /invites" version="v1" sessions={[sessions[1]]}/>
+                <ContractRow name="deps.db-driver" version="v2" sessions={[sessions[0]]}/>
+              </div>
+            </div>
+            <div>
+              <div className="lbl">decision ledger</div>
+              <div className="panel">
+                <LedgerEntry id="112" time="14:02" who="asha" head
+                  summary={<span>rename <span className="amber">users.email</span> · phone signups</span>}/>
+                <LedgerEntry id="111" time="13:41" who="chen" summary="adopt zod for DTO parsing"/>
+                <LedgerEntry id="110" time="13:18" who="ben" summary="invites API returns 202 + job id"/>
+              </div>
+            </div>
+          </div>
+        </React.Fragment>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body>
+</html>

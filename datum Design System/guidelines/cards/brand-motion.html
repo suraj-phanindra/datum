@@ -1,0 +1,34 @@
+<!-- @dsCard group="Brand" viewport="700x180" name="Motion" subtitle="Only on real events — a delta ripple, a version tick" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:0; height:100vh;
+         display:flex; align-items:center; justify-content:center; gap:48px; }
+  .demo { display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .stage { position:relative; width:70px; height:70px; display:flex; align-items:center; justify-content:center; }
+  .core { width:13px; height:13px; border-radius:50%; background:var(--amber); z-index:2; }
+  .ring { position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--amber);
+          animation:ripple var(--dur-slow,340ms) var(--ease-out) infinite; opacity:0; }
+  .ring:nth-child(2) { animation-delay:.9s; }
+  @keyframes ripple { 0%{transform:scale(.25);opacity:.9} 100%{transform:scale(1);opacity:0} }
+  .tick { font-family:var(--font-mono); font-size:22px; }
+  .tick .from { color:var(--text-tertiary); } .tick .to { color:var(--signal-amber); }
+  .cap { font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); }
+  @media (prefers-reduced-motion:reduce){ .ring{animation:none;opacity:.4} }
+</style>
+</head>
+<body>
+  <div class="demo">
+    <div class="stage"><span class="ring"></span><span class="ring"></span><span class="core"></span></div>
+    <span class="cap">delta ripple · 340ms ease-out</span>
+  </div>
+  <div class="demo">
+    <div class="stage"><span class="tick"><span class="from">v7</span> → <span class="to">v8</span></span></div>
+    <span class="cap">version tick · on detect</span>
+  </div>
+</body>
+</html>

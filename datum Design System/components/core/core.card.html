@@ -1,0 +1,80 @@
+<!-- @dsCard group="Components" viewport="700x460" name="Core" subtitle="Button · Badge · Tag · Card · Input" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:22px 24px; }
+  .sect { margin-bottom:20px; }
+  .sect > .lbl { font-family:var(--font-mono); font-size:10px; letter-spacing:.07em;
+       text-transform:uppercase; color:var(--text-tertiary); margin-bottom:10px; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { Button, Badge, Tag, Card, Input } = window.DatumDesignSystem_b409bf;
+    const Diff = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2v5M5.5 4.5h5M8 9v5M5.5 11.5h5"/></svg>;
+    const File = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 2h5l3 3v9H4z"/><path d="M9 2v3h3"/></svg>;
+    function Demo(){
+      return (
+        <React.Fragment>
+          <div className="sect">
+            <div className="lbl">button · variant / size / state</div>
+            <div className="row">
+              <Button variant="primary">approve</Button>
+              <Button variant="secondary" leadingIcon={<Diff/>}>view diff</Button>
+              <Button variant="ghost">dismiss</Button>
+              <Button variant="danger">reject delta</Button>
+              <Button variant="secondary" size="sm">sm</Button>
+              <Button variant="secondary" disabled>disabled</Button>
+            </div>
+          </div>
+          <div className="sect">
+            <div className="lbl">badge · semantic signal</div>
+            <div className="row">
+              <Badge signal="amber" live>live · v8</Badge>
+              <Badge signal="red" dot>fenced 5.8s</Badge>
+              <Badge signal="blue" dot>advised 6.4s</Badge>
+              <Badge signal="green" dot>reconciled 2/2</Badge>
+              <Badge signal="neutral">draft</Badge>
+              <Badge signal="green" variant="solid">synced</Badge>
+            </div>
+          </div>
+          <div className="sect">
+            <div className="lbl">tag · mono identifiers</div>
+            <div className="row">
+              <Tag icon={<File/>}>db.users</Tag>
+              <Tag version="v8" live>db.users</Tag>
+              <Tag>routes/users.ts</Tag>
+              <Tag>asha/schema</Tag>
+              <Tag version="v3">api.GET /users/:id</Tag>
+            </div>
+          </div>
+          <div className="grid2">
+            <Card eyebrow="contract" title="db.users" severity="amber"
+              actions={<Badge signal="amber" size="sm" live>v8</Badge>}>
+              <div style={{fontSize:12.5,color:'var(--text-secondary)',lineHeight:1.45}}>
+                users.email renamed to <span className="mono" style={{color:'var(--text-primary)'}}>contact_email</span>. migration 0042.
+              </div>
+            </Card>
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              <Input label="claim scope" mono placeholder="routes/users.ts" defaultValue="routes/users.ts"/>
+              <Input label="search registry" placeholder="filter contracts…"/>
+            </div>
+          </div>
+        </React.Fragment>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body>
+</html>

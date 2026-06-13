@@ -1,0 +1,22 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Text on field" subtitle="Three-step text hierarchy on the dark field" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); font-family:var(--font-sans);
+         padding:24px 26px; display:flex; gap:14px; flex-wrap:wrap; }
+  .c { flex:1; min-width:150px; border:var(--border); border-radius:var(--radius-sm);
+       padding:14px 16px; background:var(--surface-card); }
+  .c b { display:block; font-size:19px; margin-bottom:8px; }
+  .c code { font-family:var(--font-mono); font-size:11px; color:var(--text-tertiary); }
+</style>
+</head>
+<body>
+  <div class="c"><b style="color:var(--text-primary)">primary</b><code>#F2F1EC</code></div>
+  <div class="c"><b style="color:var(--text-secondary)">secondary</b><code>#A0A0A6</code></div>
+  <div class="c"><b style="color:var(--text-tertiary)">tertiary</b><code>#66666C</code></div>
+  <div class="c"><b style="color:var(--text-disabled)">disabled</b><code>#4A4A50</code></div>
+</body>
+</html>

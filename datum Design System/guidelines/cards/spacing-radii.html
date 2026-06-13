@@ -1,0 +1,24 @@
+<!-- @dsCard group="Spacing" viewport="700x150" name="Radii" subtitle="6–8px house range · pills for chips & avatars" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:22px 26px;
+         display:flex; gap:20px; align-items:flex-end; flex-wrap:wrap; }
+  .u { display:flex; flex-direction:column; align-items:center; gap:9px; }
+  .box { width:56px; height:56px; background:var(--surface-raised); border:var(--border-strong-rule); }
+  .u code { font-family:var(--font-mono); font-size:10.5px; color:var(--text-tertiary); }
+  .u b { font-size:11px; font-weight:500; }
+</style>
+</head>
+<body>
+  <div class="u"><div class="box" style="border-radius:3px"></div><b>xs</b><code>3px</code></div>
+  <div class="u"><div class="box" style="border-radius:5px"></div><b>sm</b><code>5px</code></div>
+  <div class="u"><div class="box" style="border-radius:7px"></div><b>md</b><code>7px</code></div>
+  <div class="u"><div class="box" style="border-radius:9px"></div><b>lg</b><code>9px</code></div>
+  <div class="u"><div class="box" style="border-radius:999px"></div><b>pill</b><code>999px</code></div>
+</body>
+</html>

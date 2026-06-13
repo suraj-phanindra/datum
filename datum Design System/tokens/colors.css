@@ -1,0 +1,110 @@
+/* ============================================================
+   datum · color tokens
+   Discipline: ambient activity is gray. Color is semantic and
+   scarce — amber = contract surface + live epoch, red = breaking
+   delta + fence, blue = advisory, green = reconciled + synced.
+   No other use of these hues anywhere.
+   ============================================================ */
+
+:root {
+  /* ---- base neutrals (dark-first) ---- */
+  --ink-900: #0B0B0C;   /* app background */
+  --ink-850: #0E0E10;   /* inset wells, code blocks */
+  --ink-800: #151517;   /* surface / cards */
+  --ink-750: #1C1C1F;   /* raised / hover surface */
+  --ink-700: #26262A;   /* hairline border */
+  --ink-600: #34343A;   /* strong border */
+  --ink-500: #66666C;   /* tertiary text, disabled glyphs */
+  --ink-400: #87878E;
+  --ink-300: #A0A0A6;   /* secondary text */
+  --ink-100: #F2F1EC;   /* primary text */
+
+  /* ---- semantic signal hues ---- */
+  --amber: #F5A623;     /* contract-surface activity, live epoch */
+  --amber-soft: #C98412;
+  --red:   #E5484D;     /* breaking delta, fenced write */
+  --red-soft: #C13438;
+  --blue:  #4D8DF6;     /* advisory */
+  --blue-soft: #3A6FD0;
+  --green: #2FA46C;     /* reconciled, synced */
+  --green-soft: #248255;
+
+  /* ============ semantic surface aliases (dark) ============ */
+  --bg-base:      var(--ink-900);
+  --bg-inset:     var(--ink-850);
+  --surface-card: var(--ink-800);
+  --surface-raised: var(--ink-750);
+  --surface-overlay: #1A1A1D;
+
+  --border-hairline: var(--ink-700);
+  --border-strong:   var(--ink-600);
+  --border-focus:    var(--ink-300);
+
+  --text-primary:   var(--ink-100);
+  --text-secondary: var(--ink-300);
+  --text-tertiary:  var(--ink-500);
+  --text-disabled:  #4A4A50;
+  --text-on-accent: #0B0B0C;
+
+  /* signal text / fill / faint tint (tints are low-alpha so they
+     stay calm against the neutral field) */
+  --signal-amber: var(--amber);
+  --signal-amber-tint: color-mix(in srgb, var(--amber) 14%, transparent);
+  --signal-amber-line: color-mix(in srgb, var(--amber) 38%, transparent);
+
+  --signal-red: #F0686C;
+  --signal-red-tint: color-mix(in srgb, var(--red) 15%, transparent);
+  --signal-red-line: color-mix(in srgb, var(--red) 40%, transparent);
+
+  --signal-blue: #6BA1F8;
+  --signal-blue-tint: color-mix(in srgb, var(--blue) 15%, transparent);
+  --signal-blue-line: color-mix(in srgb, var(--blue) 40%, transparent);
+
+  --signal-green: #3FBE80;
+  --signal-green-tint: color-mix(in srgb, var(--green) 15%, transparent);
+  --signal-green-line: color-mix(in srgb, var(--green) 40%, transparent);
+
+  /* presence ring (sessions parked on a contract) */
+  --presence-ring: var(--ink-600);
+
+  color-scheme: dark;
+}
+
+/* ================= light variant ================= */
+[data-theme="light"] {
+  --bg-base:      #FAFAF8;
+  --bg-inset:     #F1F0EA;
+  --surface-card: #FFFFFF;
+  --surface-raised: #F6F5F1;
+  --surface-overlay: #FFFFFF;
+
+  --border-hairline: #E6E5DE;
+  --border-strong:   #D4D3CA;
+  --border-focus:    #1A1A1C;
+
+  --text-primary:   #1A1A1C;
+  --text-secondary: #56565C;
+  --text-tertiary:  #8A8A90;
+  --text-disabled:  #B4B4B0;
+  --text-on-accent: #FFFFFF;
+
+  --signal-amber: #B5760A;
+  --signal-amber-tint: color-mix(in srgb, var(--amber) 16%, transparent);
+  --signal-amber-line: color-mix(in srgb, var(--amber) 50%, transparent);
+
+  --signal-red: #CE363B;
+  --signal-red-tint: color-mix(in srgb, var(--red) 12%, transparent);
+  --signal-red-line: color-mix(in srgb, var(--red) 45%, transparent);
+
+  --signal-blue: #2F6BD4;
+  --signal-blue-tint: color-mix(in srgb, var(--blue) 12%, transparent);
+  --signal-blue-line: color-mix(in srgb, var(--blue) 45%, transparent);
+
+  --signal-green: #1F8A57;
+  --signal-green-tint: color-mix(in srgb, var(--green) 13%, transparent);
+  --signal-green-line: color-mix(in srgb, var(--green) 45%, transparent);
+
+  --presence-ring: #D4D3CA;
+
+  color-scheme: light;
+}

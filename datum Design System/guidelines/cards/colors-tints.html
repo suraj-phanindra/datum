@@ -1,0 +1,29 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Signal tints" subtitle="Low-alpha tints + hairlines for chips & states" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); font-family:var(--font-sans);
+         padding:24px 26px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  .chip { display:inline-flex; align-items:center; gap:7px; padding:6px 11px;
+          border-radius:var(--radius-xs); font-family:var(--font-mono); font-size:12px; }
+  .chip .d { width:6px; height:6px; border-radius:50%; }
+  .amber { background:var(--signal-amber-tint); border:1px solid var(--signal-amber-line); color:var(--signal-amber); }
+  .amber .d { background:var(--amber); }
+  .red { background:var(--signal-red-tint); border:1px solid var(--signal-red-line); color:var(--signal-red); }
+  .red .d { background:var(--red); }
+  .blue { background:var(--signal-blue-tint); border:1px solid var(--signal-blue-line); color:var(--signal-blue); }
+  .blue .d { background:var(--blue); }
+  .green { background:var(--signal-green-tint); border:1px solid var(--signal-green-line); color:var(--signal-green); }
+  .green .d { background:var(--green); }
+</style>
+</head>
+<body>
+  <span class="chip amber"><span class="d"></span>live · v8</span>
+  <span class="chip red"><span class="d"></span>fenced 5.8s</span>
+  <span class="chip blue"><span class="d"></span>advised 6.4s</span>
+  <span class="chip green"><span class="d"></span>reconciled 2/2</span>
+</body>
+</html>

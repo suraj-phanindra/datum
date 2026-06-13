@@ -1,0 +1,74 @@
+<!-- @dsCard group="Components" viewport="700x640" name="Drift card (hero)" subtitle="The signature blast-radius mini-incident · mid-flight & resolved" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:22px 24px; }
+  .lbl { font-family:var(--font-mono); font-size:10px; letter-spacing:.07em;
+       text-transform:uppercase; color:var(--text-tertiary); margin:0 0 10px; }
+  .stack { display:flex; flex-direction:column; gap:18px; max-width:520px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { DriftCard } = window.DatumDesignSystem_b409bf;
+    const base = {
+      contract:"db.users", fromVersion:"v7", toVersion:"v8", severity:"red",
+      quote:{ who:"asha", text:"phone signups make email the wrong name." },
+      change:{ from:"users.email", to:"contact_email", migration:"migration 0042" },
+    };
+    const mid = { ...base, timestamp:"14:02:07",
+      lifecycle:[
+        {stage:"detected",elapsed:"0.3s"},
+        {stage:"fenced",elapsed:"5.8s"},
+        {stage:"advised",elapsed:"live",current:true},
+        {stage:"reconciled",pending:true},
+      ],
+      nodes:[
+        {initials:"be",label:"routes/users.ts",status:"fenced"},
+        {initials:"ch",label:"UserCard.tsx",status:"advised"},
+      ],
+    };
+    const resolved = { ...base, timestamp:"14:02:11",
+      lifecycle:[
+        {stage:"detected",elapsed:"0.3s"},
+        {stage:"fenced",elapsed:"5.8s"},
+        {stage:"advised",elapsed:"6.4s"},
+        {stage:"reconciled",elapsed:"2/2",current:true},
+      ],
+      nodes:[
+        {initials:"be",label:"routes/users.ts",status:"reconciled"},
+        {initials:"ch",label:"UserCard.tsx",status:"reconciled"},
+      ],
+      pr:{label:"spec PR #14"}, ledger:{label:"ledger #112"},
+    };
+    function Demo(){
+      return (
+        <div className="stack">
+          <div>
+            <p className="lbl">mid-flight · the moment the migration lands</p>
+            <DriftCard {...mid} defaultOpen={true}/>
+          </div>
+          <div>
+            <p className="lbl">resolved · both agents re-baselined</p>
+            <DriftCard {...resolved} defaultOpen={true}/>
+          </div>
+          <div>
+            <p className="lbl">collapsed · one calm line in the feed</p>
+            <DriftCard {...resolved} defaultOpen={false}/>
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body>
+</html>

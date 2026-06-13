@@ -1,0 +1,28 @@
+<!-- @dsCard group="Colors" viewport="700x190" name="Neutral field" subtitle="Ambient activity is gray — the calm default" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:22px 26px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; }
+  .sw { width:150px; border:var(--border); border-radius:var(--radius-sm); overflow:hidden; }
+  .chip { height:52px; }
+  .lab { padding:7px 9px; display:flex; flex-direction:column; gap:2px; background:var(--surface-card); }
+  .lab b { font-size:12px; font-weight:500; }
+  .lab code { font-family:var(--font-mono); font-size:10.5px; color:var(--text-tertiary); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:#0B0B0C"></div><div class="lab"><b>bg-base</b><code>#0B0B0C</code></div></div>
+    <div class="sw"><div class="chip" style="background:#0E0E10"></div><div class="lab"><b>bg-inset</b><code>#0E0E10</code></div></div>
+    <div class="sw"><div class="chip" style="background:#151517"></div><div class="lab"><b>surface-card</b><code>#151517</code></div></div>
+    <div class="sw"><div class="chip" style="background:#1C1C1F"></div><div class="lab"><b>surface-raised</b><code>#1C1C1F</code></div></div>
+    <div class="sw"><div class="chip" style="background:#26262A"></div><div class="lab"><b>border-hairline</b><code>#26262A</code></div></div>
+    <div class="sw"><div class="chip" style="background:#34343A"></div><div class="lab"><b>border-strong</b><code>#34343A</code></div></div>
+  </div>
+</body>
+</html>

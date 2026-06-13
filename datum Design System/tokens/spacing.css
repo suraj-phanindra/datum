@@ -1,0 +1,53 @@
+/* ============================================================
+   datum · spacing, radii, borders, motion
+   Compact density · 6–8px corner radii · 1px hairline borders
+   No elevation shadows. Motion only on real events.
+   ============================================================ */
+
+:root {
+  /* spacing — 4px base grid */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 12px;
+  --space-6: 16px;
+  --space-7: 20px;
+  --space-8: 24px;
+  --space-9: 32px;
+  --space-10: 40px;
+  --space-12: 56px;
+  --space-16: 80px;
+
+  /* radii — 6 to 8px is the house range */
+  --radius-xs: 3px;   /* chips, tags, inline tokens */
+  --radius-sm: 5px;   /* inputs, small buttons */
+  --radius-md: 7px;   /* cards, panels, buttons */
+  --radius-lg: 9px;   /* large surfaces, dialogs */
+  --radius-pill: 999px;
+  --radius-round: 50%;
+
+  /* borders — always 1px hairlines, no shadows */
+  --border-width: 1px;
+  --border: 1px solid var(--border-hairline);
+  --border-strong-rule: 1px solid var(--border-strong);
+
+  /* the only "elevation": a hairline + faint inset, never a drop shadow */
+  --ring-faint: inset 0 0 0 1px var(--border-hairline);
+  --ring-focus: 0 0 0 2px color-mix(in srgb, var(--border-focus) 55%, transparent);
+
+  /* motion — purposeful, event-driven. crisp easing, short durations */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+  --dur-instant: 80ms; /* @kind other */
+  --dur-fast: 130ms; /* @kind other */
+  --dur-base: 200ms; /* @kind other */
+  --dur-slow: 340ms; /* @kind other */
+
+  /* layout */
+  --rail-width: 320px;
+  --epoch-strip-height: 44px;
+  --topbar-height: 52px;
+  --content-max: 1440px;
+}

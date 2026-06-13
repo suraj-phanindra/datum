@@ -1,0 +1,29 @@
+<!-- @dsCard group="Colors" viewport="700x190" name="Light variant" subtitle="High-contrast paper field for docs & print" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:22px 26px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; }
+  .sw { width:150px; border:var(--border); border-radius:var(--radius-sm); overflow:hidden; }
+  .chip { height:46px; }
+  .lab { padding:7px 9px; background:var(--surface-card); }
+  .lab b { font-size:12px; font-weight:500; display:block; }
+  .lab code { font-family:var(--font-mono); font-size:10.5px; color:var(--text-tertiary); }
+  .id { margin-top:14px; font-family:var(--font-mono); font-size:13px; }
+  .id .a { color:var(--signal-amber); } .id .g { color:var(--signal-green); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw"><div class="chip" style="background:#FAFAF8"></div><div class="lab"><b>bg-base</b><code>#FAFAF8</code></div></div>
+    <div class="sw"><div class="chip" style="background:#FFFFFF"></div><div class="lab"><b>surface-card</b><code>#FFFFFF</code></div></div>
+    <div class="sw"><div class="chip" style="background:#E6E5DE"></div><div class="lab"><b>border-hairline</b><code>#E6E5DE</code></div></div>
+    <div class="sw"><div class="chip" style="background:#1A1A1C"></div><div class="lab"><b>text-primary</b><code>#1A1A1C</code></div></div>
+  </div>
+  <div class="id">db.users <span class="a">v8</span> · <span class="g">synced</span> · 14:02:11</div>
+</body>
+</html>

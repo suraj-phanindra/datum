@@ -1,0 +1,33 @@
+<!-- @dsCard group="Type" viewport="700x230" name="Mono identifiers" subtitle="Geist Mono · every contract, path, version, timestamp" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:20px 26px; }
+  .lead { font-size:12px; color:var(--text-tertiary); margin:0 0 14px;
+          font-family:var(--font-mono); letter-spacing:.04em; text-transform:uppercase; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 28px; }
+  .id { display:flex; align-items:center; gap:10px; }
+  .id .k { font-size:11px; color:var(--text-tertiary); width:78px; flex:none; }
+  .id .v { font-family:var(--font-mono); font-size:13px; color:var(--text-primary);
+           font-feature-settings:"tnum" 1; white-space:nowrap; }
+  .v .amber { color:var(--signal-amber); }
+</style>
+</head>
+<body>
+  <p class="lead">identifiers are never proportional type</p>
+  <div class="grid">
+    <div class="id"><span class="k">contract</span><span class="v">db.users</span></div>
+    <div class="id"><span class="k">path</span><span class="v">routes/users.ts</span></div>
+    <div class="id"><span class="k">version</span><span class="v">v7 → <span class="amber">v8</span></span></div>
+    <div class="id"><span class="k">timestamp</span><span class="v">14:02:11</span></div>
+    <div class="id"><span class="k">migration</span><span class="v">0042</span></div>
+    <div class="id"><span class="k">endpoint</span><span class="v">GET /users/:id</span></div>
+    <div class="id"><span class="k">branch</span><span class="v">asha/schema</span></div>
+    <div class="id"><span class="k">ledger</span><span class="v">#112</span></div>
+  </div>
+</body>
+</html>

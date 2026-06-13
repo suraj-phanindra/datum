@@ -1,0 +1,57 @@
+/* ============================================================
+   datum · base
+   Minimal element resets + the two primitives every surface
+   relies on: .mono (identifiers) and the app field defaults.
+   Keep this thin — tokens live in tokens/*.css.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--lh-normal);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* every identifier — contract names, paths, versions, timestamps */
+.mono,
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: var(--tracking-mono);
+}
+
+a { color: inherit; text-decoration: none; }
+
+::selection { background: color-mix(in srgb, var(--amber) 30%, transparent); }
+
+/* uppercase section eyebrow used across tower surfaces */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* thin custom scrollbars to match the dev-tool field */
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-track { background: transparent; }

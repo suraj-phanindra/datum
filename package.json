@@ -1,0 +1,29 @@
+{
+  "name": "datum",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The real-time coordination layer for teams of developers running Claude Code agents. Git coordinates code at rest; Datum coordinates agents in motion.",
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "bin": {
+    "datum": "cli/datum.ts"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.ts\"",
+    "test:watch": "node --test --watch \"test/**/*.test.ts\"",
+    "server": "node server/index.ts",
+    "demo": "node demo/datum-demo.ts",
+    "web": "node web/serve.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "claude-code",
+    "agents",
+    "coordination",
+    "hooks",
+    "contract-registry"
+  ],
+  "license": "MIT"
+}

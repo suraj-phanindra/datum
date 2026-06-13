@@ -1,0 +1,24 @@
+<!-- @dsCard group="Spacing" viewport="700x170" name="Borders & focus" subtitle="1px hairlines, no drop shadows — rings only" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin:0; background:var(--bg-base); color:var(--text-primary);
+         font-family:var(--font-sans); padding:22px 26px;
+         display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  .b { width:150px; height:78px; border-radius:var(--radius-md); background:var(--surface-card);
+       display:flex; align-items:center; justify-content:center; font-family:var(--font-mono);
+       font-size:11px; color:var(--text-secondary); }
+  .hair { border:1px solid var(--border-hairline); }
+  .strong { border:1px solid var(--border-strong); }
+  .focus { border:1px solid var(--border-hairline); box-shadow:var(--ring-focus); }
+</style>
+</head>
+<body>
+  <div class="b hair">hairline · 1px</div>
+  <div class="b strong">strong · 1px</div>
+  <div class="b focus">focus ring</div>
+</body>
+</html>
