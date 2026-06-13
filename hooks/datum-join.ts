@@ -16,7 +16,8 @@
 // FAIL OPEN: bus down -> exit 0, no context, append a warning. NEVER throws.
 
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
+import { runAsEntry } from "../server/entry.ts";
 
 const BUS_BUDGET_MS = 1000;
 
@@ -185,14 +186,9 @@ function errMsg(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-// Run: `node hooks/datum-join.ts`. Never throw — always exit 0.
-const isMain = (() => {
-  try {
-    return import.meta.url === `file://${resolve(process.argv[1] ?? "")}`;
-  } catch {
-    return false;
-  }
-})();
+// Run: `node hooks/datum-join.ts` (dev) or the bundled dist/hooks/datum-join.js
+// (dist). Never throw — always exit 0.
+const isMain = runAsEntry(import.meta.url, "join");
 
 if (isMain) {
   main()

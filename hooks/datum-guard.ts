@@ -26,10 +26,11 @@
 // .finally.
 
 import { readFileSync, appendFileSync, mkdirSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 
 import { decideFence, type FenceInput, type FenceDecision } from "../server/fence.ts";
 import type { Delta } from "../server/store.ts";
+import { runAsEntry } from "../server/entry.ts";
 
 // ~1s total budget for all bus IO; over budget / unreachable -> fail open.
 const BUS_BUDGET_MS = 1000;
@@ -255,14 +256,9 @@ function errMsg(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-// Run: `node hooks/datum-guard.ts`. Never throw; always exit via .finally.
-const isMain = (() => {
-  try {
-    return import.meta.url === `file://${resolve(process.argv[1] ?? "")}`;
-  } catch {
-    return false;
-  }
-})();
+// Run: `node hooks/datum-guard.ts` (dev) or the bundled dist/hooks/datum-guard.js
+// (dist). Never throw; always exit via .finally.
+const isMain = runAsEntry(import.meta.url, "guard");
 
 if (isMain) {
   main()

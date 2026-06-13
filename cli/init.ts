@@ -1,24 +1,67 @@
-// cli/init.ts — the `npx datum init` installer (sole owner: hooks-installer).
+// cli/init.ts — the `npx datumctl init` installer (sole owner: hooks-installer).
 //
-// init() writes/merges a Datum block into .claude/settings.json:
-//   - hooks.SessionStart  -> node hooks/datum-join.ts
-//   - hooks.PostToolUse   "Edit|Write|MultiEdit" -> node hooks/datum-claim.ts
-//   - hooks.PreToolUse    "Edit|Write|MultiEdit" -> node hooks/datum-fence.ts
-//       (datum-fence.ts is authored by the fence track; we only WIRE it.)
-//   - mcpServers.datum    -> node server/mcp.ts (built by the mcp-server track)
-// and seeds .datum/state.json { session_id, human, branch, last_synced_version,
+// init() writes/merges a Datum block into .claude/settings.json + seeds
+// .datum/state.json { session_id, human, branch, last_synced_version,
 // claim_files, claim_symbols, bus_url }.
 //
+// DUAL MODE — the wiring is resolved from the RUNNING module's own location, not
+// from the user's workspace, because the hook + MCP scripts live in the datum
+// INSTALL, not in the external workspace:
+//
+//   - DIST / installed build (the published `datumctl` package): write ABSOLUTE
+//     exec-form commands that point at the bundled, self-contained scripts in the
+//     install:
+//       SessionStart -> node <pkgRoot>/dist/hooks/datum-join.js
+//       PostToolUse  -> node <pkgRoot>/dist/hooks/datum-claim.js
+//       PreToolUse   -> node <pkgRoot>/dist/hooks/datum-fence.js
+//       Stop         -> node <pkgRoot>/dist/hooks/datum-guard.js
+//       mcpServers.datum -> node <pkgRoot>/dist/mcp.js
+//     pkgRoot/dist is derived from import.meta.url of the running bin (the bundle
+//     puts init alongside the bin at dist/datum.js). The dist hooks are fully
+//     self-contained (the ../server import tree is inlined), so they run with a
+//     plain `node <path>` on any Node 18+.
+//
+//   - SOURCE / dev build (the monorepo + tests): keep the original
+//     ${CLAUDE_PROJECT_DIR}/hooks/<x>.ts + server/mcp.ts behavior so native-TS
+//     dev and the existing installer.test.ts stay green.
+//
+// The mode is chosen by the __DATUM_DIST__ build flag injected by esbuild
+// (scripts/build.mjs). It is `true` only in the bundled build; undefined in the
+// native-TS dev runtime.
+//
 // Idempotent: running twice is a no-op (mergeSettingsBlock never clobbers or
-// duplicates). All hook entries use the EXEC form
-//   { type:"command", command:"node", args:["${CLAUDE_PROJECT_DIR}/hooks/<x>.ts"] }
-// with the ${CLAUDE_PROJECT_DIR} placeholder so they resolve in any workspace.
+// duplicates).
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 
+// Injected by esbuild's `define` in the dist build (scripts/build.mjs); declared
+// here so the native-TS source compiles. `typeof` keeps the read ReferenceError-
+// safe in dev where the symbol is never defined.
+declare const __DATUM_DIST__: boolean | undefined;
+
+/** True in the published/bundled build, false in native-TS dev + tests. */
+export function isDistBuild(): boolean {
+  try {
+    if (typeof __DATUM_DIST__ !== "undefined" && __DATUM_DIST__) return true;
+  } catch {
+    /* not defined in dev */
+  }
+  return process.env.DATUM_DIST === "1";
+}
+
 const PROJECT_DIR = "${CLAUDE_PROJECT_DIR}";
+
+/**
+ * The dist/ root of the running install. In the bundled build this module lives
+ * in dist/datum.js, so import.meta.url's directory IS the dist root. Resolved
+ * lazily so the source/dev path never depends on it.
+ */
+function distRoot(): string {
+  return dirname(fileURLToPath(import.meta.url));
+}
 
 export type HookCommand = {
   type: "command";
@@ -67,9 +110,24 @@ export type DatumState = {
 
 export const DEFAULT_BUS_URL = "http://127.0.0.1:4317";
 
-// EXEC-form node command for a hook script under ${CLAUDE_PROJECT_DIR}.
-function nodeHook(rel: string): HookCommand {
-  return { type: "command", command: "node", args: [`${PROJECT_DIR}/${rel}`] };
+// EXEC-form node command for a hook script.
+//   dev/source: ${CLAUDE_PROJECT_DIR}/hooks/<name>.ts  (native TS, in-workspace)
+//   dist/install: <pkgRoot>/dist/hooks/<name>.js       (bundled, absolute)
+// `name` is the bare hook stem (e.g. "datum-fence"); the source/dist mapping is
+// applied here so callers stay mode-agnostic.
+function nodeHook(name: string): HookCommand {
+  if (isDistBuild()) {
+    return { type: "command", command: "node", args: [join(distRoot(), "hooks", `${name}.js`)] };
+  }
+  return { type: "command", command: "node", args: [`${PROJECT_DIR}/hooks/${name}.ts`] };
+}
+
+/** The MCP server stanza: dist -> dist/mcp.js (absolute); dev -> server/mcp.ts. */
+function mcpStanza(): { command: string; args: string[] } {
+  if (isDistBuild()) {
+    return { command: "node", args: [join(distRoot(), "mcp.js")] };
+  }
+  return { command: "node", args: [`${PROJECT_DIR}/server/mcp.ts`] };
 }
 
 /**
@@ -139,19 +197,23 @@ function sameCommand(a: HookCommand, b: HookCommand): boolean {
   return aa.every((x, i) => x === ba[i]);
 }
 
-/** The Datum settings block (hooks + MCP). EXEC form, ${CLAUDE_PROJECT_DIR}. */
+/**
+ * The Datum settings block (hooks + MCP). EXEC form. Dual-mode: in the dist
+ * build every path is an ABSOLUTE node command into the install's dist/; in dev
+ * it stays the ${CLAUDE_PROJECT_DIR}/...ts source form.
+ */
 export function datumSettingsBlock(): Partial<Settings> {
   return {
     hooks: {
-      SessionStart: [{ hooks: [nodeHook("hooks/datum-join.ts")] }],
-      PostToolUse: [{ matcher: "Edit|Write|MultiEdit", hooks: [nodeHook("hooks/datum-claim.ts")] }],
-      PreToolUse: [{ matcher: "Edit|Write|MultiEdit", hooks: [nodeHook("hooks/datum-fence.ts")] }],
+      SessionStart: [{ hooks: [nodeHook("datum-join")] }],
+      PostToolUse: [{ matcher: "Edit|Write|MultiEdit", hooks: [nodeHook("datum-claim")] }],
+      PreToolUse: [{ matcher: "Edit|Write|MultiEdit", hooks: [nodeHook("datum-fence")] }],
       // Stop guard (stretch, P3): refuse "done" while an unacknowledged delta
       // intersects this session's scope. Blocks locally only — emits NO bus event.
-      Stop: [{ hooks: [nodeHook("hooks/datum-guard.ts")] }],
+      Stop: [{ hooks: [nodeHook("datum-guard")] }],
     },
     mcpServers: {
-      datum: { command: "node", args: [`${PROJECT_DIR}/server/mcp.ts`] },
+      datum: mcpStanza(),
     },
   };
 }
@@ -184,16 +246,21 @@ export function init(opts: InitOptions): InitResult {
   };
   writeJson(statePath, state);
 
+  // describe the wiring honestly for whichever mode produced it.
+  const ext = isDistBuild() ? "js" : "ts";
+  const hookBase = isDistBuild() ? join(distRoot(), "hooks") : "hooks";
+  const mcpDesc = isDistBuild() ? join(distRoot(), "mcp.js") : "server/mcp.ts";
+
   return {
     settingsPath,
     statePath,
     settings: merged,
     state,
     wired: [
-      "SessionStart -> hooks/datum-join.ts",
-      "PostToolUse(Edit|Write|MultiEdit) -> hooks/datum-claim.ts",
-      "PreToolUse(Edit|Write|MultiEdit) -> hooks/datum-fence.ts",
-      "mcpServers.datum -> server/mcp.ts",
+      `SessionStart -> ${join(hookBase, `datum-join.${ext}`)}`,
+      `PostToolUse(Edit|Write|MultiEdit) -> ${join(hookBase, `datum-claim.${ext}`)}`,
+      `PreToolUse(Edit|Write|MultiEdit) -> ${join(hookBase, `datum-fence.${ext}`)}`,
+      `mcpServers.datum -> ${mcpDesc}`,
     ],
   };
 }

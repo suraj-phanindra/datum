@@ -6,6 +6,7 @@
 // No model touches this path.
 
 import { createBus, type BusHandle, type StartOptions } from "./bus.ts";
+import { runAsEntry } from "./entry.ts";
 
 export type { BusHandle, StartOptions } from "./bus.ts";
 export { Store } from "./store.ts";
@@ -54,14 +55,8 @@ export async function startBus(opts: StartOptions = {}): Promise<StartBusResult>
   return { url: handle.url, port: handle.port, close: handle.close };
 }
 
-// Run directly: `node server/index.ts`
-const isMain = (() => {
-  try {
-    return import.meta.url === `file://${process.argv[1]}`;
-  } catch {
-    return false;
-  }
-})();
+// Run directly: `node server/index.ts` (dev) or `node dist/server.js` (dist).
+const isMain = runAsEntry(import.meta.url, "server");
 
 if (isMain) {
   startBus()

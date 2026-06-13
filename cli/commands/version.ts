@@ -12,7 +12,20 @@ import { out, emitJson, ambient, mark, ident } from "../lib/format.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
+// Injected by esbuild's `define` in the dist build (scripts/build.mjs). Undefined
+// in native-TS dev, where we read package.json from the repo root instead.
+declare const __DATUM_VERSION__: string | undefined;
+
 export function datumVersion(): string {
+  // dist build: package.json isn't shipped (files: ["dist", ...]); use the
+  // version baked in at build time.
+  try {
+    if (typeof __DATUM_VERSION__ !== "undefined" && __DATUM_VERSION__) {
+      return __DATUM_VERSION__;
+    }
+  } catch {
+    /* not defined in dev */
+  }
   try {
     const pkg = JSON.parse(
       readFileSync(join(HERE, "..", "..", "package.json"), "utf8"),

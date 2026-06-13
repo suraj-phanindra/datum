@@ -1,18 +1,24 @@
 {
-  "name": "datum",
+  "name": "datumctl",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "description": "The real-time coordination layer for teams of developers running Claude Code agents. Git coordinates code at rest; Datum coordinates agents in motion.",
   "engines": {
-    "node": ">=22.6.0"
+    "node": ">=18"
   },
   "bin": {
-    "datum": "cli/datum.ts"
+    "datumctl": "dist/datum.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "node --test \"test/**/*.test.ts\"",
     "test:watch": "node --test --watch \"test/**/*.test.ts\"",
+    "build": "node scripts/build.mjs",
+    "prepublishOnly": "npm run build",
     "server": "node server/index.ts",
     "demo": "node demo/datum-demo.ts",
     "web": "node web/serve.ts",
@@ -25,5 +31,11 @@
     "hooks",
     "contract-registry"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/suraj-phanindra/datum.git" },
+  "homepage": "https://github.com/suraj-phanindra/datum#readme",
+  "bugs": { "url": "https://github.com/suraj-phanindra/datum/issues" },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
 }

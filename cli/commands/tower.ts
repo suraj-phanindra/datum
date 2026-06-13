@@ -4,6 +4,7 @@
 
 import type { Command } from "./types.ts";
 import { startTower } from "../../web/serve.ts";
+import { isDistBuild } from "../init.ts";
 import { out, ambient, synced, warn, mark, ident } from "../lib/format.ts";
 
 function num(v: string | boolean | undefined): number | undefined {
@@ -19,6 +20,19 @@ export const towerCommand: Command = {
   group: "ops",
   help: "The tower shows what no single cockpit can see: shared truth, presence, drift, ledger.",
   async run(ctx) {
+    // The tower serves static web assets (index.html, tower.js, tokens) that ship
+    // only in the source repo, not in the published package. Don't crash trying to
+    // read files that aren't in the install — point the user at the source repo.
+    if (isDistBuild()) {
+      out(ambient("datum tower: the web tower runs from the datum source repo."));
+      out(
+        ambient(
+          "Clone https://github.com/suraj-phanindra/datum and run `npm run web` (or `datum tower`\n" +
+            "the source checkout). `datumctl serve` (the bus) works from this install.",
+        ),
+      );
+      return 0;
+    }
     const port = num(ctx.flags.port);
     const open = ctx.flags.open === true || ctx.flags.open === "true";
     try {

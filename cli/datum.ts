@@ -22,6 +22,7 @@ import { BusClient } from "./lib/client.ts";
 import { DEFAULT_BUS_URL, readStateOrDefault, hasState, projectDir } from "./lib/state.ts";
 import { disableColor, warn } from "./lib/format.ts";
 import { printGlobalHelp, printCommandHelp } from "./commands/help.ts";
+import { runAsEntry } from "../server/entry.ts";
 
 // ---- global-flag parsing ----
 
@@ -173,14 +174,11 @@ export async function main(argv: string[]): Promise<number> {
   return run(argv);
 }
 
-// run directly (node cli/datum.ts ...)
-const isMain = (() => {
-  try {
-    return import.meta.url === `file://${process.argv[1]}`;
-  } catch {
-    return false;
-  }
-})();
+// run directly: `node cli/datum.ts ...` (dev) or the bundled dist/datum.js bin
+// (dist). The bundled bin inlines server/index.ts + the hooks; runAsEntry keeps
+// only the "cli" entry's main() live so the inlined bus/hook auto-run blocks stay
+// dormant (no second bus on the port).
+const isMain = runAsEntry(import.meta.url, "cli");
 
 if (isMain) {
   main(process.argv.slice(2))

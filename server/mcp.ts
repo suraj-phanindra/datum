@@ -16,6 +16,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { runAsEntry } from "./entry.ts";
 
 const PROTOCOL_VERSION = "2024-11-05";
 const DEFAULT_BUS_URL = "http://127.0.0.1:4317";
@@ -325,14 +326,8 @@ function startStdioLoop(): void {
   process.stdin.on("end", () => process.exit(0));
 }
 
-// Run directly: `node server/mcp.ts`
-const isMain = (() => {
-  try {
-    return import.meta.url === `file://${process.argv[1]}`;
-  } catch {
-    return false;
-  }
-})();
+// Run directly: `node server/mcp.ts` (dev) or `node dist/mcp.js` (dist).
+const isMain = runAsEntry(import.meta.url, "mcp");
 
 if (isMain) {
   startStdioLoop();

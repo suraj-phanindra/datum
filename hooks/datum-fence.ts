@@ -20,10 +20,11 @@
 // append a line to .datum/warnings.log. The hook NEVER throws.
 
 import { readFileSync, appendFileSync, mkdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 
 import { decideFence, type FenceInput, type FenceDecision } from "../server/fence.ts";
 import type { Delta } from "../server/store.ts";
+import { runAsEntry } from "../server/entry.ts";
 
 // ~1s total budget for all bus IO; over budget -> fail open (schema §8).
 const BUS_BUDGET_MS = 1000;
@@ -313,14 +314,9 @@ function errMsg(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-// Run: `node hooks/datum-fence.ts`. Never throw — always exit 0.
-const isMain = (() => {
-  try {
-    return import.meta.url === `file://${resolve(process.argv[1] ?? "")}`;
-  } catch {
-    return false;
-  }
-})();
+// Run: `node hooks/datum-fence.ts` (dev) or the bundled dist/hooks/datum-fence.js
+// (dist). Never throw — always exit 0.
+const isMain = runAsEntry(import.meta.url, "fence");
 
 if (isMain) {
   main()

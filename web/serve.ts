@@ -18,6 +18,7 @@ import { createServer, type IncomingMessage, type ServerResponse, type Server } 
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { runAsEntry } from "../server/entry.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, "..");
@@ -339,14 +340,10 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body));
 }
 
-// Run directly: `node web/serve.ts`
-const isMain = (() => {
-  try {
-    return import.meta.url === `file://${process.argv[1]}`;
-  } catch {
-    return false;
-  }
-})();
+// Run directly: `node web/serve.ts` (dev only). The tower is never a dist entry
+// (its static assets don't ship); runAsEntry with the "tower" id stays false in
+// the dist bundle, so the inlined block does not auto-start a tower.
+const isMain = runAsEntry(import.meta.url, "tower");
 
 if (isMain) {
   startTower()

@@ -16,6 +16,21 @@ A deterministic fast path and a model slow path:
 
 The model is never on the critical path: the fence fires with the arbiter disabled.
 
+## Install
+
+```bash
+npx datumctl init        # wire Claude Code hooks + MCP, seed local state
+datumctl serve           # start the coordination bus (point sessions here)
+```
+
+`datumctl` ships as a self-contained npm package with **zero runtime dependencies**
+(it uses only Node built-ins). `init` writes absolute, exec-form hook commands into
+`.claude/settings.json` that point at the bundled scripts in the install, so the
+fence/claim/join/guard hooks resolve correctly in any external workspace. Requires
+Node ≥ 18 for the hooks; `datumctl serve` (the bus) uses `node:sqlite` and needs a
+Node build that includes it (≥ 22.5). The web tower and scripted demo run from a
+source checkout (`npm run web` / `npm run demo`).
+
 ## Layout
 
 ```

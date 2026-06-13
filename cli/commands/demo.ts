@@ -7,6 +7,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { Command } from "./types.ts";
+import { isDistBuild } from "../init.ts";
 import { out, ambient } from "../lib/format.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -18,6 +19,18 @@ export const demoCommand: Command = {
   usage: "datum demo",
   group: "ops",
   async run(ctx) {
+    // The scripted demo + seed repo ship only in the source tree, not the
+    // published package. Point the user at the source repo rather than crash.
+    if (isDistBuild()) {
+      out(ambient("datum demo: the scripted scenario runs from the datum source repo."));
+      out(
+        ambient(
+          "From a source checkout: `npm run demo`. From this install you can still\n" +
+            "`datumctl serve` (the bus), `datumctl init`, and drive a real session.",
+        ),
+      );
+      return 0;
+    }
     const demoPath = join(PROJECT_ROOT, "demo", "datum-demo.ts");
     if (existsSync(demoPath)) {
       const { spawnSync } = await import("node:child_process");
