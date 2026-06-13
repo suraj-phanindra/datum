@@ -9,11 +9,13 @@ import { join, dirname } from "node:path";
 
 export const DEFAULT_BUS_URL = "http://127.0.0.1:4317";
 
-// schema §8
+// schema §8 + §10 (workspace_id + email are the additive team fields).
 export type DatumState = {
   session_id: string;
   human: string;
+  email: string;
   branch: string;
+  workspace_id: string;
   last_synced_version: number;
   claim_files: string[];
   claim_symbols: string[];
@@ -71,7 +73,9 @@ function normalize(raw: Partial<DatumState>): DatumState {
   return {
     session_id: raw.session_id ?? "",
     human: raw.human ?? "",
+    email: raw.email ?? "",
     branch: raw.branch ?? "",
+    workspace_id: raw.workspace_id ?? "",
     last_synced_version: Number(raw.last_synced_version ?? 0),
     claim_files: Array.isArray(raw.claim_files) ? raw.claim_files.map(String) : [],
     claim_symbols: Array.isArray(raw.claim_symbols) ? raw.claim_symbols.map(String) : [],

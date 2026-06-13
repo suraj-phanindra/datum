@@ -14,6 +14,7 @@ import { Reconciler } from "./reconcile.ts";
 export type BusHandle = {
   url: string;
   port: number;
+  host: string; // the bind host (127.0.0.1 by default, 0.0.0.0 when --public)
   server: Server;
   store: Store;
   db: Database;
@@ -22,7 +23,7 @@ export type BusHandle = {
 
 type SseClient = { id: number; res: ServerResponse };
 
-export type StartOptions = { port?: number; dbPath?: string };
+export type StartOptions = { port?: number; dbPath?: string; host?: string };
 
 /**
  * Build and start the bus server. Returns a handle with the resolved url + a
@@ -179,20 +180,34 @@ export function createBus(opts: StartOptions = {}): Promise<BusHandle> {
     // ---- POST /sessions ----
     if (method === "POST" && path === "/sessions") {
       const body = await readJson(req);
+      const sessionWorkspace = String(body.workspace_id ?? "");
       const session: Session = {
         id: String(body.session_id ?? body.id ?? ""),
         human: String(body.human ?? ""),
+        email: String(body.email ?? ""),
         branch: String(body.branch ?? ""),
+        workspace_id: sessionWorkspace,
         claim_files: asStringArray(body.claim_files),
         claim_symbols: asStringArray(body.claim_symbols),
         last_synced_version: store.getVersion(),
         status: "live",
       };
       store.upsertSession(session);
+
+      // §10: the bus is single-registry per team. Adopt the first workspace_id it
+      // sees; warn (never block) a session that joins with a DIFFERENT one.
+      const served = store.adoptWorkspace(sessionWorkspace);
+      let warning: string | undefined;
+      if (sessionWorkspace && served && sessionWorkspace !== served) {
+        warning = `this bus serves ${served}, you are in ${sessionWorkspace}`;
+      }
+
       const joined = store.addEvent("session.joined", {
         session_id: session.id,
         human: session.human,
+        email: session.email,
         branch: session.branch,
+        workspace_id: session.workspace_id,
         claim_files: session.claim_files,
         claim_symbols: session.claim_symbols,
         registry_version: store.getVersion(),
@@ -215,8 +230,10 @@ export function createBus(opts: StartOptions = {}): Promise<BusHandle> {
         .map((e) => (e.payload as { advisory?: unknown }).advisory ?? e.payload);
       return sendJson(res, 200, {
         registry_version: store.getVersion(),
+        workspace_id: served,
         snapshot: { registry_version: store.getVersion(), contracts: store.listContracts() },
         advisories,
+        ...(warning ? { warning } : {}),
       });
     }
 
@@ -227,7 +244,9 @@ export function createBus(opts: StartOptions = {}): Promise<BusHandle> {
       const body = await readJson(req);
       const patch: Partial<Omit<Session, "id">> = {};
       if (body.human != null) patch.human = String(body.human);
+      if (body.email != null) patch.email = String(body.email);
       if (body.branch != null) patch.branch = String(body.branch);
+      if (body.workspace_id != null) patch.workspace_id = String(body.workspace_id);
       if (body.claim_files != null) patch.claim_files = asStringArray(body.claim_files);
       if (body.claim_symbols != null) patch.claim_symbols = asStringArray(body.claim_symbols);
       if (body.last_synced_version != null) patch.last_synced_version = Number(body.last_synced_version);
@@ -326,13 +345,19 @@ export function createBus(opts: StartOptions = {}): Promise<BusHandle> {
 
   return new Promise<BusHandle>((resolve) => {
     const port = opts.port ?? 0;
-    server.listen(port, "127.0.0.1", () => {
+    // §10: bind 127.0.0.1 by default; --host 0.0.0.0 (or any host) for a shared /
+    // tunneled bus. The advertised url uses 127.0.0.1 when bound to a wildcard so
+    // a local probe (healthz) still resolves; the bind hint is printed by serve.
+    const host = opts.host || "127.0.0.1";
+    server.listen(port, host, () => {
       const addr = server.address();
       const resolvedPort = typeof addr === "object" && addr ? addr.port : Number(port);
-      const url = `http://127.0.0.1:${resolvedPort}`;
+      const advertiseHost = host === "0.0.0.0" || host === "::" ? "127.0.0.1" : host;
+      const url = `http://${advertiseHost}:${resolvedPort}`;
       resolve({
         url,
         port: resolvedPort,
+        host,
         server,
         store,
         db,

@@ -30,7 +30,9 @@ type SessionStartInput = {
 type DatumState = {
   session_id?: string;
   human?: string;
+  email?: string;
   branch?: string;
+  workspace_id?: string;
   last_synced_version?: number;
   claim_files?: string[];
   claim_symbols?: string[];
@@ -60,6 +62,8 @@ async function main(): Promise<void> {
   const deadline = Date.now() + BUS_BUDGET_MS;
   let body: {
     registry_version?: number;
+    workspace_id?: string;
+    warning?: string;
     snapshot?: { registry_version?: number; contracts?: Contract[] };
     advisories?: unknown[];
   } | null = null;
@@ -67,7 +71,9 @@ async function main(): Promise<void> {
     body = await postSession(busUrl, deadline, {
       session_id: sessionId,
       human: state.human ?? "",
+      email: state.email ?? "",
       branch: state.branch ?? "",
+      workspace_id: state.workspace_id ?? "",
       claim_files: state.claim_files ?? [],
       claim_symbols: state.claim_symbols ?? [],
     });
@@ -85,7 +91,11 @@ async function main(): Promise<void> {
   // persist the synced epoch back to local state (cache for the fence fast path).
   writeState(statePath, { ...state, session_id: sessionId || state.session_id, last_synced_version: registryVersion });
 
-  const additionalContext = renderSnapshot(registryVersion, contracts, (body.advisories ?? []).length);
+  // §10: a bus workspace-mismatch warning is surfaced (fail-open) but never blocks.
+  let additionalContext = renderSnapshot(registryVersion, contracts, (body.advisories ?? []).length);
+  if (body.warning) {
+    additionalContext += ` datum: ${body.warning}.`;
+  }
   emit({
     hookSpecificOutput: {
       hookEventName: "SessionStart",

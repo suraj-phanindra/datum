@@ -30,7 +30,9 @@ import {
 import { mechanicalText } from "./shared.ts";
 
 function workspaceName(ctx: Ctx): string {
-  return basename(ctx.projectDir) || "workspace";
+  // §10: the team is the repo — prefer the derived workspace_id, fall back to the
+  // project dir basename for a pre-team (or non-git) checkout.
+  return ctx.state.workspace_id || basename(ctx.projectDir) || "workspace";
 }
 
 export const statusCommand: Command = {
@@ -58,6 +60,7 @@ export const statusCommand: Command = {
     if (ctx.json) {
       emitJson({
         workspace: workspaceName(ctx),
+        workspace_id: state.workspace_id,
         bus_reachable: reachable,
         epoch,
         session_id: state.session_id,
@@ -81,7 +84,8 @@ export const statusCommand: Command = {
     }
 
     // ---- header + epoch strip ----
-    out(`${mark()} ${bold("datum")} ${ambient("·")} ${ident(workspaceName(ctx))}`);
+    // §10: the workspace line reads "team · <workspace_id>".
+    out(`${mark()} ${bold("datum")} ${ambient("·")} ${ambient("team")} ${ambient("·")} ${ident(workspaceName(ctx))}`);
     out(`  ${ambient("epoch")}  ${epochStrip(epoch)}`);
     if (!reachable) {
       out(ambient(`  bus unreachable — showing local cache (synced to v${state.last_synced_version})`));

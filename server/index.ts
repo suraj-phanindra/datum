@@ -42,17 +42,23 @@ function defaultPort(): number {
   return 4317;
 }
 
-export type StartBusResult = { url: string; port: number; close: () => Promise<void> };
+export type StartBusResult = {
+  url: string;
+  port: number;
+  host: string;
+  close: () => Promise<void>;
+};
 
 /**
  * Start the bus. With no port, uses DATUM_BUS_URL's port or 4317. Pass port: 0
  * for an ephemeral port (tests). dbPath defaults to .datum/datum.db; pass
- * ':memory:' for isolated tests.
+ * ':memory:' for isolated tests. host defaults to 127.0.0.1; pass 0.0.0.0 (or any
+ * interface) for a shared / tunneled bus (§10).
  */
 export async function startBus(opts: StartOptions = {}): Promise<StartBusResult> {
   const port = opts.port ?? defaultPort();
-  const handle: BusHandle = await createBus({ port, dbPath: opts.dbPath });
-  return { url: handle.url, port: handle.port, close: handle.close };
+  const handle: BusHandle = await createBus({ port, dbPath: opts.dbPath, host: opts.host });
+  return { url: handle.url, port: handle.port, host: handle.host, close: handle.close };
 }
 
 // Run directly: `node server/index.ts` (dev) or `node dist/server.js` (dist).

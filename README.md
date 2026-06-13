@@ -31,6 +31,31 @@ Node ≥ 18 for the hooks; `datumctl serve` (the bus) uses `node:sqlite` and nee
 Node build that includes it (≥ 22.5). The web tower and scripted demo run from a
 source checkout (`npm run web` / `npm run demo`).
 
+## Teams (self-hosted, git-native)
+
+**The team is the repo.** No login, no member list to maintain: membership = having
+the repo. Identity derives from git config, and the workspace id derives from the
+git remote — so every clone of the same repo lands in the **same team automatically**.
+
+```bash
+# 1) one shared bus for the whole team (run it on a VM or a tunnel)
+datumctl serve --public          # binds 0.0.0.0 + prints a tailscale/ngrok/cloudflared hint
+
+# 2) datum init per engineer (the first init creates the committed datum.json)
+datum init                       # human <- git user.name, email <- user.email,
+                                 # branch <- current branch, workspace_id <- the remote
+git add datum.json && git commit -m "datum: shared team config"
+
+# 3) see the live fleet
+datumctl team                    # workspace + bus + roster (git shortlog for agents)
+```
+
+`datum.json` (committed, repo root) shares the team's `bus_url` + `workspace`; the
+first `init` creates it, the rest read it. The bus is single-registry per team — it
+adopts the first `workspace_id` it sees and warns (never blocks) a session from a
+different repo. Full git-native model: [`docs/prd/teams.md`](docs/prd/teams.md).
+Hosted multi-tenant SaaS is the next phase.
+
 ## Layout
 
 ```

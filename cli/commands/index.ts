@@ -9,6 +9,7 @@ import { initCommand } from "./init.ts";
 import { doctorCommand } from "./doctor.ts";
 import { uninstallCommand } from "./uninstall.ts";
 import { statusCommand } from "./status.ts";
+import { teamCommand } from "./team.ts";
 import { syncCommand } from "./sync.ts";
 import { claimCommand } from "./claim.ts";
 import { advisoriesCommand } from "./advisories.ts";
@@ -33,6 +34,7 @@ export const COMMAND_LIST: Command[] = [
   uninstallCommand,
   // cockpit (daily driver)
   statusCommand,
+  teamCommand,
   syncCommand,
   claimCommand,
   advisoriesCommand,

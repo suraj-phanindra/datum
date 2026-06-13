@@ -62,12 +62,16 @@ export function seedScenario(store: Store): void {
     description: "adopt zod for DTO parsing",
   });
 
-  // the three sessions (schema §9 claims — the intersection fixture).
+  // the three sessions (schema §9 claims — the intersection fixture). Team
+  // acme/workspaces -> workspace_id github.com/acme/workspaces (§10).
+  const WORKSPACE = "github.com/acme/workspaces";
   const sessions: Session[] = [
     {
       id: "sess-asha",
       human: "asha",
+      email: "asha@acme.dev",
       branch: "asha/schema",
+      workspace_id: WORKSPACE,
       claim_files: ["migrations/**", "schema.sql"],
       claim_symbols: ["users.email", "users.contact_email"],
       last_synced_version: 7,
@@ -76,7 +80,9 @@ export function seedScenario(store: Store): void {
     {
       id: "sess-ben",
       human: "ben",
+      email: "ben@acme.dev",
       branch: "ben/api",
+      workspace_id: WORKSPACE,
       claim_files: ["routes/users.ts"],
       claim_symbols: ["user.email", ".email"],
       last_synced_version: 7,
@@ -85,7 +91,9 @@ export function seedScenario(store: Store): void {
     {
       id: "sess-chen",
       human: "chen",
+      email: "chen@acme.dev",
       branch: "chen/ui",
+      workspace_id: WORKSPACE,
       claim_files: ["UserCard.tsx"],
       claim_symbols: ["user.email", "UserDTO.email"],
       last_synced_version: 7,
@@ -93,6 +101,8 @@ export function seedScenario(store: Store): void {
     },
   ];
   for (const s of sessions) store.upsertSession(s);
+  // the bus adopts the team's workspace from the seed (§10).
+  store.adoptWorkspace(WORKSPACE);
 }
 
 // asha's hero migration edit (schema §9): users.email -> contact_email, 0042.

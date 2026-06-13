@@ -44,7 +44,9 @@ CREATE TABLE IF NOT EXISTS ledger (
   contract_id TEXT                          -- optional link
 );
 
--- sessions: a human + their agent, as one unit (§2)
+-- sessions: a human + their agent, as one unit (§2 + §10).
+-- workspace_id + email are the additive team columns (§10): OPTIONAL, defaulted,
+-- so a pre-team db migrates cleanly (see migrateSessions below).
 CREATE TABLE IF NOT EXISTS sessions (
   id                  TEXT PRIMARY KEY,
   human               TEXT NOT NULL,
@@ -52,7 +54,9 @@ CREATE TABLE IF NOT EXISTS sessions (
   claim_files         TEXT NOT NULL,        -- JSON string[]
   claim_symbols       TEXT NOT NULL,        -- JSON string[]
   last_synced_version INTEGER NOT NULL,
-  status              TEXT NOT NULL         -- live|fenced|reconciling|reconciled|idle
+  status              TEXT NOT NULL,        -- live|fenced|reconciling|reconciled|idle
+  workspace_id        TEXT NOT NULL DEFAULT '',  -- §10 the team key (host/owner/repo)
+  email               TEXT NOT NULL DEFAULT ''   -- §10 git-native identity
 );
 
 -- events: the append-only bus log, source of truth for replay + tower (§2)
@@ -82,11 +86,30 @@ export function openDb(path = ".datum/datum.db"): Database {
   db.exec("PRAGMA journal_mode = WAL;");
   db.exec("PRAGMA foreign_keys = ON;");
   db.exec(SCHEMA);
+  migrateSessions(db);
   // Seed the epoch row once; never clobber an existing value.
   db.prepare(
     "INSERT OR IGNORE INTO meta (key, value) VALUES ('registry_version', '0')",
   ).run();
   return db;
+}
+
+/**
+ * Additive migration (§10): older databases predate the sessions.workspace_id +
+ * email columns. ADD COLUMN them if missing so a pre-team db keeps working. This
+ * is idempotent — a fresh db already has them from SCHEMA, and PRAGMA
+ * table_info tells us which to add.
+ */
+function migrateSessions(db: Database): void {
+  const cols = (db.prepare("PRAGMA table_info(sessions)").all() as Array<{ name: string }>).map(
+    (c) => c.name,
+  );
+  if (!cols.includes("workspace_id")) {
+    db.exec("ALTER TABLE sessions ADD COLUMN workspace_id TEXT NOT NULL DEFAULT ''");
+  }
+  if (!cols.includes("email")) {
+    db.exec("ALTER TABLE sessions ADD COLUMN email TEXT NOT NULL DEFAULT ''");
+  }
 }
 
 /** Close the database handle. */

@@ -32,7 +32,7 @@ type Parsed = {
   flags: Record<string, string | boolean>;
 };
 
-const VALUE_FLAGS = new Set(["bus-url", "content", "symbols", "branch", "human", "files", "author", "contract", "port", "limit", "tool", "project-dir"]);
+const VALUE_FLAGS = new Set(["bus-url", "content", "symbols", "branch", "human", "files", "author", "contract", "port", "limit", "tool", "project-dir", "workspace", "host"]);
 
 /**
  * Parse argv into { command, args, flags }. The first non-flag token is the

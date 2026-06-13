@@ -42,10 +42,14 @@ export type LedgerEntry = {
 
 export type SessionStatus = "live" | "fenced" | "reconciling" | "reconciled" | "idle";
 
+// §2 + §10. workspace_id + email are the additive team fields (default "" so old
+// rows + old callers stay valid).
 export type Session = {
   id: string;
   human: string;
+  email: string;
   branch: string;
+  workspace_id: string;
   claim_files: string[];
   claim_symbols: string[];
   last_synced_version: number;
@@ -115,6 +119,36 @@ export class Store {
           "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
       )
       .run(String(epoch));
+  }
+
+  // ---- workspace (§10): the bus is single-registry per team. It adopts the
+  // FIRST workspace_id it sees and warns sessions that join with a different one.
+
+  /** The workspace this bus serves, or "" if no session has named one yet. */
+  getWorkspace(): string {
+    const row = this.db
+      .prepare("SELECT value FROM meta WHERE key = 'workspace_id'")
+      .get() as { value: string } | undefined;
+    return row ? row.value : "";
+  }
+
+  /**
+   * Adopt `workspace_id` as this bus's workspace IFF none is set yet (the first
+   * join wins). A blank id is ignored (fail-open for pre-team callers). Returns
+   * the workspace the bus serves after the call.
+   */
+  adoptWorkspace(workspaceId: string): string {
+    const id = (workspaceId ?? "").trim();
+    if (!id) return this.getWorkspace();
+    const current = this.getWorkspace();
+    if (current) return current;
+    this.db
+      .prepare(
+        "INSERT INTO meta (key, value) VALUES ('workspace_id', ?) " +
+          "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      )
+      .run(id);
+    return id;
   }
 
   // ---- contracts ----
@@ -226,11 +260,12 @@ export class Store {
     this.db
       .prepare(
         "INSERT INTO sessions " +
-          "(id, human, branch, claim_files, claim_symbols, last_synced_version, status) " +
-          "VALUES (?, ?, ?, ?, ?, ?, ?) " +
+          "(id, human, branch, claim_files, claim_symbols, last_synced_version, status, workspace_id, email) " +
+          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
           "ON CONFLICT(id) DO UPDATE SET human=excluded.human, branch=excluded.branch, " +
           "claim_files=excluded.claim_files, claim_symbols=excluded.claim_symbols, " +
-          "last_synced_version=excluded.last_synced_version, status=excluded.status",
+          "last_synced_version=excluded.last_synced_version, status=excluded.status, " +
+          "workspace_id=excluded.workspace_id, email=excluded.email",
       )
       .run(
         s.id,
@@ -240,6 +275,8 @@ export class Store {
         JSON.stringify(s.claim_symbols),
         s.last_synced_version,
         s.status,
+        s.workspace_id ?? "",
+        s.email ?? "",
       );
   }
 
@@ -323,13 +360,17 @@ type RawSession = {
   claim_symbols: string;
   last_synced_version: number;
   status: SessionStatus;
+  workspace_id?: string;
+  email?: string;
 };
 
 function hydrateSession(r: RawSession): Session {
   return {
     id: r.id,
     human: r.human,
+    email: r.email ?? "",
     branch: r.branch,
+    workspace_id: r.workspace_id ?? "",
     claim_files: JSON.parse(r.claim_files) as string[],
     claim_symbols: JSON.parse(r.claim_symbols) as string[],
     last_synced_version: r.last_synced_version,

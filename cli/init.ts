@@ -36,6 +36,19 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
+import {
+  deriveWorkspaceId,
+  gitUserName,
+  gitUserEmail,
+  currentBranch,
+  repoRoot,
+} from "./lib/git.ts";
+import {
+  readConfig,
+  writeConfig,
+  hasConfig,
+  type DatumConfig,
+} from "./lib/config.ts";
 
 // Injected by esbuild's `define` in the dist build (scripts/build.mjs); declared
 // here so the native-TS source compiles. `typeof` keeps the read ReferenceError-
@@ -84,7 +97,9 @@ export type InitOptions = {
   projectDir: string;
   busUrl?: string;
   human?: string;
+  email?: string;
   branch?: string;
+  workspaceId?: string;
   claimFiles?: string[];
   claimSymbols?: string[];
   sessionId?: string;
@@ -93,15 +108,21 @@ export type InitOptions = {
 export type InitResult = {
   settingsPath: string;
   statePath: string;
+  configPath: string;
+  configCreated: boolean;
   settings: Settings;
   state: DatumState;
+  config: DatumConfig;
   wired: string[];
 };
 
+// schema §8 + §10 — local per-user state (workspace_id + email are additive).
 export type DatumState = {
   session_id: string;
   human: string;
+  email: string;
   branch: string;
+  workspace_id: string;
   last_synced_version: number;
   claim_files: string[];
   claim_symbols: string[];
@@ -219,26 +240,68 @@ export function datumSettingsBlock(): Partial<Settings> {
 }
 
 /**
- * init — write/merge .claude/settings.json + seed .datum/state.json. Idempotent.
+ * init — write/merge .claude/settings.json + seed .datum/state.json + manage the
+ * committed datum.json team config. Idempotent. Git-native (schema §10):
+ *
+ *   - human  <- git config user.name  (flag --human / DATUM_HUMAN override)
+ *   - email  <- git config user.email
+ *   - branch <- git rev-parse --abbrev-ref HEAD (flag --branch override)
+ *   - workspace_id <- datum.json.workspace (or derived from the git remote when
+ *     "auto"); flag --workspace override.
+ *
+ * datum.json (the shared team config, committed at the repo root): if ABSENT,
+ * CREATE it (workspace:"auto", bus_url from flag/env/default — you set up the
+ * team); if PRESENT, READ it so the whole team shares one bus_url + workspace.
+ * Merge order for bus_url/human: datum.json < env < flags.
  */
 export function init(opts: InitOptions): InitResult {
   const projectDir = opts.projectDir;
-  const busUrl = opts.busUrl || process.env.DATUM_BUS_URL || DEFAULT_BUS_URL;
 
-  // 1) merge the Datum block into .claude/settings.json (create if absent).
+  // 0) the team config lives at the repo ROOT (committed), not necessarily the
+  //    .datum/.claude dir. Fall back to projectDir when not in a git work tree.
+  const root = repoRoot(projectDir) || projectDir;
+
+  // 1) datum.json (the shared team config). Read it if present; create it on the
+  //    first init. The merge precedence for bus_url is: datum.json < env < flags.
+  const configCreated = !hasConfig(root);
+  const existingConfig = readConfig(root);
+  const busUrl =
+    opts.busUrl || process.env.DATUM_BUS_URL || existingConfig?.bus_url || DEFAULT_BUS_URL;
+  const config: DatumConfig = {
+    workspace: opts.workspaceId || existingConfig?.workspace || "auto",
+    bus_url: busUrl,
+    ...(existingConfig?.watchlist ? { watchlist: existingConfig.watchlist } : {}),
+    spec_path: existingConfig?.spec_path,
+  };
+  writeConfig(root, config);
+
+  // 2) resolve the workspace_id: an explicit datum.json.workspace wins; "auto"
+  //    (or empty) derives from the git remote. A --workspace flag forces it.
+  const workspaceId =
+    opts.workspaceId ||
+    (config.workspace && config.workspace !== "auto" ? config.workspace : deriveWorkspaceId(projectDir));
+
+  // 3) git-native identity. Flags / env override the git config derivation.
+  const human = opts.human ?? process.env.DATUM_HUMAN ?? gitUserName(projectDir);
+  const email = opts.email ?? gitUserEmail(projectDir);
+  const branch = opts.branch ?? process.env.DATUM_BRANCH ?? currentBranch(projectDir);
+
+  // 4) merge the Datum block into .claude/settings.json (create if absent).
   const settingsPath = join(projectDir, ".claude", "settings.json");
   const settings = readSettings(settingsPath);
   const merged = mergeSettingsBlock(settings, "datum", datumSettingsBlock());
   writeJson(settingsPath, merged);
 
-  // 2) seed .datum/state.json (don't clobber an existing session_id /
+  // 5) seed .datum/state.json (don't clobber an existing session_id /
   //    last_synced_version — re-running init keeps a live session intact).
   const statePath = join(projectDir, ".datum", "state.json");
-  const existing = readState(statePath);
+  const existing = readLocalState(statePath);
   const state: DatumState = {
     session_id: existing.session_id || opts.sessionId || randomUUID(),
-    human: opts.human ?? existing.human ?? "",
-    branch: opts.branch ?? existing.branch ?? "",
+    human: human || existing.human || "",
+    email: email || existing.email || "",
+    branch: branch || existing.branch || "",
+    workspace_id: workspaceId || existing.workspace_id || "",
     last_synced_version: existing.last_synced_version ?? 0,
     claim_files: opts.claimFiles ?? existing.claim_files ?? [],
     claim_symbols: opts.claimSymbols ?? existing.claim_symbols ?? [],
@@ -254,8 +317,11 @@ export function init(opts: InitOptions): InitResult {
   return {
     settingsPath,
     statePath,
+    configPath: join(root, "datum.json"),
+    configCreated,
     settings: merged,
     state,
+    config,
     wired: [
       `SessionStart -> ${join(hookBase, `datum-join.${ext}`)}`,
       `PostToolUse(Edit|Write|MultiEdit) -> ${join(hookBase, `datum-claim.${ext}`)}`,
@@ -276,7 +342,7 @@ function readSettings(path: string): Settings {
   }
 }
 
-function readState(path: string): Partial<DatumState> {
+function readLocalState(path: string): Partial<DatumState> {
   if (!existsSync(path)) return {};
   try {
     return JSON.parse(readFileSync(path, "utf8")) as Partial<DatumState>;

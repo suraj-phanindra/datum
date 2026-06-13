@@ -230,3 +230,33 @@ Unit tests:
 - Ledger: `#112` 14:02 asha · rename users.email (phone signups landing); `#111` 13:41 chen · adopt zod for DTO parsing; `#110` 13:18 ben · invites API returns 202 + job id. **Seed loads `#110` + `#111` only** (ids inserted explicitly so the next auto-increment is 112); **`#112` is created live** when asha's delta is detected (bus-registry), and **spec-pr *links* it** (it does not re-create it via `POST /decide`).
 - Metrics: deltas today **4**, writes fenced **3**, delta→fence **5.8s**, rework avoided **~412k tokens**.
 - Claims (for the intersection): asha `{files:["migrations/**","schema.sql"], symbols:["users.email","users.contact_email"]}`; ben `{files:["routes/users.ts"], symbols:["user.email",".email"]}`; chen `{files:["UserCard.tsx"], symbols:["user.email","UserDTO.email"]}`.
+
+---
+
+## 10. Teams (self-hosted, git-native) — RECONCILED addendum
+
+The team is the **repo**. No login, no member list to maintain: membership = having the repo (git's own model). Identity derives from git config. A committed `datum.json` shares the team config; a shared bus connects everyone.
+
+**Workspace id (the team key).** Derived by `datum init` from `git remote get-url origin`, normalized to `host/owner/repo` (e.g. `github.com/acme/workspaces`), stripping protocol/`.git`/trailing slash. No remote → fall back to `local/<repo-dir-basename>`. Every clone of the same repo derives the same `workspace_id` → same team automatically.
+
+**Git-native identity (zero login).** `datum init` derives, with `--human`/`--branch` flags overriding:
+- `human` ← `git config user.name` (fallback `$USER`/`"someone"`)
+- `email` ← `git config user.email`
+- `branch` ← `git rev-parse --abbrev-ref HEAD`
+
+**`datum.json` (committed, repo root) — shared team config:**
+```jsonc
+{ "workspace": "auto",              // "auto" = derive from the git remote, or an explicit id
+  "bus_url": "http://127.0.0.1:4317", // the shared bus everyone connects to
+  "watchlist": {},                  // optional contract-surface overrides
+  "spec_path": "docs/spec.md" }     // the arbiter's spec-patch target
+```
+First `datum init` creates it (you set up the team); subsequent inits READ it (so the whole team shares `bus_url` + `workspace`). Merge order: `datum.json` < env (`DATUM_BUS_URL`/`DATUM_HUMAN`) < flags.
+
+**`.datum/state.json` (per-user, gitignored)** gains `workspace_id` + `email`: `{ session_id, human, email, branch, workspace_id, last_synced_version, claim_files, claim_symbols, bus_url }`.
+
+**Join carries the workspace.** `datum-join`/`POST /sessions` send `workspace_id` (+ `email`). The `sessions` table gains a `workspace_id` (and `email`) column; `session.joined` includes it. The bus is single-registry per team (one bus = one workspace): it adopts the first `workspace_id` it sees and **warns** a session that joins with a different `workspace_id` ("this bus serves X, you are in Y") — fail-open, never blocks. (Full multi-workspace tenancy is the hosted-SaaS step.)
+
+**Reachable bus.** `datumctl serve [--host 0.0.0.0] [--public]` binds the host (default `127.0.0.1`; `--public`/`--host 0.0.0.0` for a shared/tunneled bus), prints the bind URL + a tunnel hint. A distributed team runs one `datumctl serve` (on a VM or a Tailscale/ngrok/cloudflared tunnel) and points `datum.json.bus_url` at it.
+
+**`datumctl team`.** Shows the team: `workspace_id`, `bus_url`, and the **live roster** from `GET /sessions` (each member's human/email/branch/claim/status/synced version) — `git shortlog` for the live fleet. `datumctl status` header shows the workspace ("team · github.com/acme/workspaces"). Presence everywhere keys on the member, derived from git identity.
