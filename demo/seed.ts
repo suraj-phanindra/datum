@@ -15,14 +15,24 @@
 // git, node:fs). No model touches this path.
 
 import { spawnSync } from "node:child_process";
-import { mkdirSync, writeFileSync, rmSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { mkdirSync, writeFileSync, rmSync, mkdtempSync, realpathSync } from "node:fs";
+import { join, dirname, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-/** Default on-disk location of the seed repo (inside demo/). */
-export const WORKSPACE_REPO_DIR = join(HERE, "workspace-invites");
+/**
+ * Default location of the seed repo. A fresh dir UNDER os.tmpdir(), NOT inside
+ * the datum repo: building a nested git repo inside the parent is a hazard — if
+ * concurrent demo runs `rm` the dir mid-`checkout`, git walks up to the PARENT
+ * .git and creates the seed's branches there (it once moved this repo's HEAD).
+ * A unique tmp dir per build eliminates both the nesting and the collision.
+ */
+export const WORKSPACE_REPO_DIR = join(HERE, "workspace-invites"); // legacy/back-compat; not the default
+function freshRepoDir(): string {
+  return mkdtempSync(join(tmpdir(), "datum-wsi-"));
+}
 
 export type WorkspaceRepo = {
   /** Absolute path to the git repo. */
@@ -140,7 +150,7 @@ function commitAll(dir: string, message: string): void {
  * The three branches touch DISJOINT files so a later `git merge` of all three
  * onto a fresh integration branch is conflict-free (demo PRD predicate #6).
  */
-export function buildWorkspaceRepo(dir: string = WORKSPACE_REPO_DIR): WorkspaceRepo {
+export function buildWorkspaceRepo(dir: string = freshRepoDir()): WorkspaceRepo {
   const migrationFile = migrationContent();
   const base = "main";
   const branches = { asha: "asha/schema", ben: "ben/api", chen: "chen/ui" };
@@ -150,6 +160,19 @@ export function buildWorkspaceRepo(dir: string = WORKSPACE_REPO_DIR): WorkspaceR
   mkdirSync(dir, { recursive: true });
 
   gitMust(dir, ["init", "-q"]);
+  // SAFETY: confirm git resolved to THIS dir's repo, never a parent repo. If the
+  // seed dir were nested inside a git repo (e.g. datum's own .git) and init were
+  // skipped or raced, the checkouts below would create branches in the PARENT and
+  // move its HEAD. Refuse to proceed unless the git-dir is inside `dir`.
+  const gd = git(dir, ["rev-parse", "--absolute-git-dir"]);
+  // realpath both sides: git resolves symlinks (macOS /var -> /private/var), so a
+  // raw resolve()+startsWith would false-positive the hazard on an os.tmpdir() path.
+  const real = realpathSync(dir);
+  if (!gd.ok || !resolve(gd.out).startsWith(real)) {
+    throw new Error(
+      `seed: refusing to operate — git-dir "${gd.out}" is not inside "${real}" (nested-repo hazard).`,
+    );
+  }
   gitMust(dir, ["checkout", "-q", "-B", base]);
 
   // ---- main: the v7 truth (email everywhere) ----
