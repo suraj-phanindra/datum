@@ -115,6 +115,32 @@ export function createBus(opts: StartOptions = {}): Promise<BusHandle> {
       });
     }
 
+    // ---- GET /sessions (live roster — read-only; cockpit status uses it) ----
+    if (method === "GET" && path === "/sessions") {
+      return sendJson(res, 200, { sessions: store.listSessions() });
+    }
+
+    // ---- GET /events?since=N (the bus log; cockpit log/ledger uses it) ----
+    if (method === "GET" && path === "/events") {
+      const since = numParam(u, "since", 0);
+      return sendJson(res, 200, { events: store.getEventsSince(since) });
+    }
+
+    // ---- GET /ledger (decision history for `datum log`) ----
+    if (method === "GET" && path === "/ledger") {
+      return sendJson(res, 200, { ledger: store.listLedger() });
+    }
+
+    // ---- GET /contracts/:id/versions (history for `datum show`/`datum diff`) ----
+    const verMatch = /^\/contracts\/(.+)\/versions$/.exec(path);
+    if (method === "GET" && verMatch) {
+      const cid = decodeURIComponent(verMatch[1]);
+      return sendJson(res, 200, {
+        contract: store.getContract(cid) ?? null,
+        versions: store.listContractVersions(cid),
+      });
+    }
+
     // ---- GET /deltas?since=N ----
     if (method === "GET" && path === "/deltas") {
       const since = numParam(u, "since", 0);

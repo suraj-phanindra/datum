@@ -1,177 +1,192 @@
 #!/usr/bin/env node
-// cli/datum.ts — the `npx datum` entry point. Subcommands:
-//   datum init            wire .claude/settings.json + seed .datum/state.json
-//   datum decide "..."    POST /decide a free-form decision (epoch-neutral)
-//   datum demo            delegate to demo/datum-demo.ts if present
+// cli/datum.ts — the datum CLI entry + router.
 //
-// Minimal arg parsing; Node built-ins only. Never crashes the user's shell on a
-// bad subcommand — prints usage and exits non-zero only on genuine errors.
+// Parses argv + GLOBAL FLAGS (--bus-url/DATUM_BUS_URL, --json, --no-color,
+// -h/--help, -v/--version), resolves the dispatch Ctx, and dispatches into the
+// COMMANDS registry (cli/commands/index.ts). Self-documenting, fail-soft,
+// scriptable (git/gh-shaped).
+//
+// Behavior:
+//   bare `datum`        -> status if .datum/state.json exists, else help.
+//   datum <cmd> ...      -> registry dispatch (run returns the exit code).
+//   --help / -h          -> global or per-command help.
+//   --version / -v       -> version.
+//   unknown command      -> usage + exit 1.
+//
+// EXIT CODES: 0 ok · 1 error · 2 drift detected. The router never throws to the
+// shell; an unexpected error prints a one-line warning and exits 1.
 
-import { existsSync, readFileSync } from "node:fs";
-import { join, resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { COMMANDS, COMMAND_LIST } from "./commands/index.ts";
+import type { Command, Ctx } from "./commands/types.ts";
+import { BusClient } from "./lib/client.ts";
+import { DEFAULT_BUS_URL, readStateOrDefault, hasState, projectDir } from "./lib/state.ts";
+import { disableColor, warn } from "./lib/format.ts";
+import { printGlobalHelp, printCommandHelp } from "./commands/help.ts";
 
-import { init, DEFAULT_BUS_URL } from "./init.ts";
+// ---- global-flag parsing ----
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = resolve(HERE, "..");
+type Parsed = {
+  command?: string;
+  args: string[];
+  flags: Record<string, string | boolean>;
+};
 
-async function main(argv: string[]): Promise<number> {
-  const [cmd, ...rest] = argv;
+const VALUE_FLAGS = new Set(["bus-url", "content", "symbols", "branch", "human", "files", "author", "contract", "port", "limit", "tool", "project-dir"]);
 
-  switch (cmd) {
-    case "init":
-      return cmdInit(rest);
-    case "decide":
-      return cmdDecide(rest);
-    case "demo":
-      return cmdDemo(rest);
-    case undefined:
-    case "help":
-    case "-h":
-    case "--help":
-      printUsage();
-      return cmd === undefined ? 1 : 0;
-    default:
-      console.error(`datum: unknown command "${cmd}"\n`);
-      printUsage();
-      return 1;
-  }
-}
+/**
+ * Parse argv into { command, args, flags }. The first non-flag token is the
+ * command; everything after is the command's args. `--k v` consumes a value for
+ * known value-flags or when the next token isn't another flag; `--k=v` always
+ * binds; bare `--k` is boolean true. `-h/-v` are recognised globally.
+ */
+export function parseArgv(argv: string[]): Parsed {
+  const flags: Record<string, string | boolean> = {};
+  const args: string[] = [];
+  let command: string | undefined;
 
-// ---- datum init ----
-
-function cmdInit(args: string[]): number {
-  const flags = parseFlags(args);
-  const projectDir = flags["project-dir"] || process.env.CLAUDE_PROJECT_DIR || process.cwd();
-  const busUrl = flags["bus-url"] || process.env.DATUM_BUS_URL || DEFAULT_BUS_URL;
-  const result = init({
-    projectDir,
-    busUrl,
-    human: flags.human || process.env.DATUM_HUMAN,
-    branch: flags.branch || process.env.DATUM_BRANCH,
-    claimFiles: flags.files ? flags.files.split(",").map((s) => s.trim()).filter(Boolean) : undefined,
-    claimSymbols: flags.symbols ? flags.symbols.split(",").map((s) => s.trim()).filter(Boolean) : undefined,
-  });
-
-  console.log("datum: wired Claude Code coordination:");
-  for (const w of result.wired) console.log(`  - ${w}`);
-  console.log(`  settings: ${result.settingsPath}`);
-  console.log(`  state:    ${result.statePath} (bus ${result.state.bus_url})`);
-  return 0;
-}
-
-// ---- datum decide "..." ----
-
-async function cmdDecide(args: string[]): Promise<number> {
-  const flags = parseFlags(args);
-  const description = flags._positional.join(" ").trim();
-  if (!description) {
-    console.error('datum decide: needs a decision, e.g. datum decide "use SSE for the tower"');
-    return 1;
-  }
-  const busUrl = flags["bus-url"] || process.env.DATUM_BUS_URL || DEFAULT_BUS_URL;
-  const author = flags.author || process.env.DATUM_HUMAN || readHumanFromState() || "";
-  const contract = flags.contract;
-
-  try {
-    const res = await fetch(`${busUrl}/decide`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ author, description, contract }),
-    });
-    if (!res.ok) {
-      console.error(`datum decide: bus returned ${res.status}`);
-      return 1;
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "-h" || a === "--help") {
+      flags.help = true;
+      continue;
     }
-    const body = (await res.json()) as { ledger_id?: number; registry_version?: number };
-    console.log(
-      `datum: recorded decision #${body.ledger_id} (registry v${body.registry_version}, epoch-neutral).`,
-    );
-    return 0;
-  } catch (err) {
-    console.error(`datum decide: could not reach bus at ${busUrl} (${errMsg(err)}).`);
-    return 1;
-  }
-}
-
-// ---- datum demo ----
-
-async function cmdDemo(args: string[]): Promise<number> {
-  const demoPath = join(PROJECT_ROOT, "demo", "datum-demo.ts");
-  if (existsSync(demoPath)) {
-    const { spawnSync } = await import("node:child_process");
-    const r = spawnSync(process.execPath, [demoPath, ...args], { stdio: "inherit" });
-    return r.status ?? 0;
-  }
-  console.log(
-    "datum demo: the demo runner (demo/datum-demo.ts) isn't present yet.\n" +
-      "Start the bus with `node server/index.ts`, run `datum init`, then open a\n" +
-      "Claude Code session to watch the registry sync live.",
-  );
-  return 0;
-}
-
-// ---- arg parsing (minimal) ----
-
-type Flags = { [k: string]: string } & { _positional: string[] };
-
-function parseFlags(args: string[]): Flags {
-  const flags: Flags = { _positional: [] };
-  for (let i = 0; i < args.length; i++) {
-    const a = args[i];
+    if (a === "-v" || a === "--version") {
+      flags.version = true;
+      continue;
+    }
     if (a.startsWith("--")) {
       const eq = a.indexOf("=");
       if (eq !== -1) {
         flags[a.slice(2, eq)] = a.slice(eq + 1);
-      } else {
-        const next = args[i + 1];
-        if (next != null && !next.startsWith("--")) {
-          flags[a.slice(2)] = next;
-          i++;
-        } else {
-          flags[a.slice(2)] = "true";
-        }
+        continue;
       }
-    } else {
-      flags._positional.push(a);
+      const key = a.slice(2);
+      const next = argv[i + 1];
+      // consume a value only for known value-flags. A lone "-" (stdin sentinel)
+      // is a legal value; any other token starting with "-" is treated as the
+      // next flag, so a value-flag with no value becomes boolean true.
+      const nextIsValue = next != null && (next === "-" || !next.startsWith("-"));
+      if (VALUE_FLAGS.has(key) && nextIsValue) {
+        flags[key] = next;
+        i++;
+      } else {
+        flags[key] = true;
+      }
+      continue;
     }
+    if (command === undefined) command = a;
+    else args.push(a);
   }
-  return flags;
+  return { command, args, flags };
 }
 
-function readHumanFromState(): string | undefined {
+// ---- bus url resolution ----
+
+function resolveBusUrl(flags: Record<string, string | boolean>, stateBusUrl: string): string {
+  const flag = flags["bus-url"];
+  if (typeof flag === "string" && flag) return flag;
+  if (process.env.DATUM_BUS_URL) return process.env.DATUM_BUS_URL;
+  if (stateBusUrl) return stateBusUrl;
+  return DEFAULT_BUS_URL;
+}
+
+// ---- main / run ----
+
+/**
+ * run — the testable router. Parses argv (sans node + script), builds the Ctx,
+ * dispatches, and returns the exit code. Never throws (catches command errors
+ * and returns 1 with a one-line warning).
+ */
+export async function run(argv: string[]): Promise<number> {
+  const { command, args, flags } = parseArgv(argv);
+
+  // global color discipline: --no-color or --json disables ANSI.
+  const json = flags.json === true;
+  if (flags["no-color"] === true || json) disableColor();
+
+  const dir = projectDir();
+  const state = readStateOrDefault(dir);
+  const busUrl = resolveBusUrl(flags, state.bus_url);
+  const ctx: Ctx = {
+    args,
+    flags,
+    json,
+    busUrl,
+    bus: new BusClient(busUrl),
+    projectDir: dir,
+    state,
+    hasState: hasState(dir),
+  };
+
+  // -v / --version (global)
+  if (flags.version === true && command === undefined) {
+    return dispatch(COMMANDS.get("version")!, ctx);
+  }
+
+  // -h / --help (global, no command) -> grouped help.
+  if (flags.help === true && command === undefined) {
+    if (json) return dispatch(COMMANDS.get("help")!, ctx);
+    printGlobalHelp(COMMAND_LIST, busUrl);
+    return 0;
+  }
+
+  // bare `datum` -> status if state exists, else help.
+  if (command === undefined) {
+    if (ctx.hasState) return dispatch(COMMANDS.get("status")!, ctx);
+    printGlobalHelp(COMMAND_LIST, busUrl);
+    return 0;
+  }
+
+  const cmd = COMMANDS.get(command);
+  if (!cmd) {
+    warn(`unknown command "${command}".`);
+    printGlobalHelp(COMMAND_LIST, busUrl);
+    return 1;
+  }
+
+  // per-command --help / -h -> that command's help.
+  if (flags.help === true) {
+    if (json) {
+      ctx.args = [cmd.name];
+      return dispatch(COMMANDS.get("help")!, ctx);
+    }
+    printCommandHelp(cmd);
+    return 0;
+  }
+
+  return dispatch(cmd, ctx);
+}
+
+async function dispatch(cmd: Command, ctx: Ctx): Promise<number> {
   try {
-    const path = join(process.env.CLAUDE_PROJECT_DIR || process.cwd(), ".datum", "state.json");
-    const state = JSON.parse(readFileSync(path, "utf8")) as { human?: string };
-    return state.human;
-  } catch {
-    return undefined;
+    const code = await cmd.run(ctx);
+    return typeof code === "number" ? code : 0;
+  } catch (err) {
+    // fail-soft: never leak a stack trace to the shell.
+    warn(`${cmd.name}: ${err instanceof Error ? err.message : String(err)}`);
+    return 1;
   }
 }
 
-function printUsage(): void {
-  console.log(
-    [
-      "datum — the real-time coordination layer for teams of Claude Code agents.",
-      "",
-      "Usage:",
-      "  datum init [--human NAME] [--branch B] [--files a,b] [--symbols x,y] [--bus-url URL]",
-      "  datum decide \"<decision>\" [--author NAME] [--contract ID] [--bus-url URL]",
-      "  datum demo",
-      "",
-      `Bus URL defaults to ${DEFAULT_BUS_URL} (override with DATUM_BUS_URL).`,
-    ].join("\n"),
-  );
+/** main — process entry. */
+export async function main(argv: string[]): Promise<number> {
+  return run(argv);
 }
 
-function errMsg(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
-}
+// run directly (node cli/datum.ts ...)
+const isMain = (() => {
+  try {
+    return import.meta.url === `file://${process.argv[1]}`;
+  } catch {
+    return false;
+  }
+})();
 
-main(process.argv.slice(2))
-  .then((code) => process.exit(code))
-  .catch((err) => {
-    console.error(`datum: ${errMsg(err)}`);
-    process.exit(1);
-  });
+if (isMain) {
+  main(process.argv.slice(2))
+    .then((code) => process.exit(code))
+    .catch((err) => {
+      warn(err instanceof Error ? err.message : String(err));
+      process.exit(1);
+    });
+}
