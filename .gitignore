@@ -31,3 +31,4 @@ demo/workspace-invites/
 dist/
 .playwright-mcp/
 .wrangler/
+.gstack/
