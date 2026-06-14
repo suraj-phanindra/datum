@@ -24,3 +24,11 @@ The load-bearing principle: **keep the model off the critical path — correctne
 **The moment it earned its keep:** ben's agent, mid-task after asha's migration, went to write `routes/users.ts` still selecting `.email`. The fence denied it with a reason naming the contract, the mechanical change (`email → contact_email`), the migration (0042), and the author (asha). The agent read that reason and, on its **next action**, rewrote the query to `contact_email` — it self-corrected with **no human input**. Both consumers reconciled and three branches merged clean.
 
 **We dogfooded the same orchestration to build Datum.** We froze one shared schema, then ran an **anti-drift critic** over 12 PRDs authored by parallel agents — it caught 7 integration seams (an unowned `reconciled` emitter, a missing re-sync write-back, an ambiguous epoch-bump rule) *before a line of code was written*: exactly the merge-time drift Datum exists to prevent. We then built feature-by-feature with parallel implementer agents and an adversarial verifier on every step — the verifier caught a real bug where a hook shipped only an edit's first line, so the schema parser missed the rename and the fence wrongly allowed the write. Deterministic core, model for judgment, verify everything.
+
+**Links (all in the repo):**
+- Brief: [`CLAUDE.md`](../../CLAUDE.md) (master context) + [`docs/BUILD_PLAN.md`](../BUILD_PLAN.md) (the phased sequence)
+- Rubric / definition of done: [`docs/RUBRIC.md`](../RUBRIC.md)
+- The frozen shared contract every agent coded against: [`docs/prd/schema.md`](../prd/schema.md)
+- The anti-drift critic's findings + the sole-owner matrix: [`docs/prd/RECONCILIATION.md`](../prd/RECONCILIATION.md) (+ the per-feature PRDs in [`docs/prd/`](../prd/))
+- The actual multi-agent workflow scripts I ran: [`docs/workflows/`](../workflows/) (10 scripts + an index)
+- The full build transcript: [`session-log.md`](../../session-log.md)
