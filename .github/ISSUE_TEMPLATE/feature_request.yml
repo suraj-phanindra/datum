@@ -1,0 +1,48 @@
+name: Feature request
+description: Suggest an idea or improvement for Datum.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an improvement. Datum's core is the whole protocol (CLI, hooks, MCP, bus, registry, fence, arbiter, and the git-native team layer), and the core is never crippled. Please describe the problem before the solution so we can find the best fit.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use-case
+      description: What are you trying to do, and where does Datum fall short today? Describe the situation, not just the missing feature.
+      placeholder: |
+        When two engineers change the same API shape on different branches, I have no way to ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed solution
+      description: What you would like to see. Be as concrete as you can about the behavior and where it fits (fast path vs. arbiter, CLI vs. tower, etc.).
+      placeholder: |
+        A new `datumctl ...` command that ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches or workarounds you have tried or thought about, and why they fall short.
+      placeholder: |
+        I tried using a git pre-commit hook, but it only fires at commit time, not at the next write.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Optional. Anything else that helps, such as links, screenshots, or related issues.
+    validations:
+      required: false

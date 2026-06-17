@@ -6,7 +6,7 @@
 //
 // Precedence: deny > inject > allow. The fast path (lastSyncedVersion ===
 // currentVersion) returns allow WITHOUT consulting deltas — this is the cache
-// hit that keeps steady state at ~0 HTTP and <50ms (RUBRIC line 25).
+// hit that keeps steady state at ~0 HTTP and <50ms (the fence-latency budget).
 //
 // Casing: Delta is the snake_case `delta.detected` wire shape (schema §3/§4);
 // its `mechanical_change` field is consumed directly. referencesStaleSymbol does
@@ -78,7 +78,7 @@ export function decideFence(input: FenceInput): FenceDecision {
   return { decision: "allow" };
 }
 
-// ---- deny reason (schema §7 / RUBRIC line 18) ----
+// ---- deny reason (schema §7 / deny-message acceptance check) ----
 //
 // Names: the contract_id, the mechanical change ("email -> contact_email"), the
 // migration (0042), the author (asha), and the imperative "Re-sync to v{epoch}

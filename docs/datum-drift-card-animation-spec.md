@@ -85,9 +85,9 @@ Rule of thumb: things entering use an emphasized decelerate so they arrive and s
 
 ## Two run modes
 
-Live mode (finalist demo, real agents). Pure event-driven. The early cluster (detected, fenced, advised) lands within about six real seconds, which is naturally good on a projector. The reconcile gap of roughly eighty seconds is dead air, so narrate over it; when ben and chen reconcile, the card resolves on its own, which is a strong "it fixed itself while I was talking" moment. Do not fake it.
+Live mode (real agents). Pure event-driven. The early cluster (detected, fenced, advised) lands within about six real seconds, which is naturally good on a projector. The reconcile gap of roughly eighty seconds is quiet, so narrate over it; when ben and chen reconcile, the card resolves on its own, which is a strong "it fixed itself while I was talking" moment. Do not fake it.
 
-Replay/video mode (60-second submission, and your backup if the live run fails). A scripted emitter fires the same stage transitions on a compressed timeline. Critical honesty rule: the elapsed-time text inside the chips stays the real numbers (0.3s, 5.8s, 6.4s, reconciled by 14:03:40, PR 14:04). Only the wall-clock pacing of the animation is compressed. You are showing a time-lapse and the labels say so.
+Replay/video mode (a short recorded walkthrough). A scripted emitter fires the same stage transitions on a compressed timeline. Critical honesty rule: the elapsed-time text inside the chips stays the real numbers (0.3s, 5.8s, 6.4s, reconciled by 14:03:40, PR 14:04). Only the wall-clock pacing of the animation is compressed. You are showing a time-lapse and the labels say so.
 
 Suggested compressed timeline (about 8 seconds):
 - 0.0s detected
