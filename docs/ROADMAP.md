@@ -166,6 +166,6 @@ go-to-market).
 ## 7. How to use this doc
 
 This is the map, not a plan. When we start a sub-project we write its own spec
-(`docs/superpowers/specs/`), then an implementation plan, then build it with the
-core frozen and verified continuously. Revise this roadmap whenever reality diverges
-from it — a stale roadmap is exactly the drift Datum exists to prevent.
+(`docs/specs/`), then build it with the core frozen and verified continuously. Revise
+this roadmap whenever reality diverges from it; a stale roadmap is exactly the drift
+Datum exists to prevent.
