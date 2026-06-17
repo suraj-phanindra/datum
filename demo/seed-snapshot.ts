@@ -68,7 +68,7 @@ export type DatumSnapshot = {
 // ---- offline, deterministic advisory fixture (schema §6 verbatim bodies) ----
 // Mirrors datum-demo.ts's FIXTURE_BODY so the frozen replay is byte-stable and
 // needs no network / `claude` CLI. The two bodies DIFFER and each names the
-// recipient's file (RUBRIC).
+// recipient's file (the acceptance check asserts the advisories differ per recipient).
 const FIXTURE_BODY: Record<string, { body: string; actions: string[] }> = {
   ben: {
     body: "users.email is now contact_email (migration 0042, asha). Your open diff selects .email in two queries; update both before your next write.",

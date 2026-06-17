@@ -1,5 +1,5 @@
-// test/fence.test.ts — the deterministic fence acceptance test (RUBRIC line 18
-// + line 25 cache hit + line 26 fail open). Run: node --test test/fence.test.ts
+// test/fence.test.ts — the deterministic fence acceptance test (deny on a stale
+// contract, cache-hit fast path, and fail open). Run: node --test test/fence.test.ts
 //
 // Covers:
 //   (1) routes/users.ts selecting .email, behind by one epoch on db.users
@@ -19,7 +19,7 @@ import assert from "node:assert/strict";
 import { decideFence, type FenceInput } from "../server/fence.ts";
 import type { Delta } from "../server/store.ts";
 
-// The hero delta: db.users v7 -> v8, users.email -> contact_email, migration 0042,
+// The scenario delta: db.users v7 -> v8, users.email -> contact_email, migration 0042,
 // author asha. This is the `delta.detected` payload shape (schema §3/§4).
 const ASHA_DELTA: Delta = {
   epoch: 8,
@@ -55,7 +55,7 @@ test("fence (1): write to routes/users.ts selecting .email, behind one epoch -> 
   assert.equal(decision.decision === "deny", true);
   if (decision.decision !== "deny") return;
 
-  // RUBRIC line 18: reason names the contract, the mechanical change, the author.
+  // the reason must name the contract, the mechanical change, and the author.
   assert.match(decision.reason, /db\.users/);
   assert.match(decision.reason, /email/);
   assert.match(decision.reason, /contact_email/);
@@ -146,7 +146,7 @@ test("fence (5) HOOK smoke: real bus + seed + asha migration -> spawned hook std
   fs.mkdirSync(datumDir, { recursive: true });
 
   try {
-    // 3) apply asha's hero migration -> epoch 8 (so the session is behind by 1).
+    // 3) apply asha's migration -> epoch 8 (so the session is behind by 1).
     const apply = await fetch(`${bus.url}/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

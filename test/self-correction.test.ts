@@ -2,15 +2,15 @@
 //
 //   node --test test/self-correction.test.ts
 //
-// Formalizes the RUBRIC line: "A fenced agent reads the reason and self-corrects
-// on its next action with no human input." Self-correction owns ONLY this file;
+// Formalizes the acceptance check: a fenced agent reads the reason and
+// self-corrects on its next action with no human input. Self-correction owns ONLY this file;
 // the deny-reason copy is fence-owned (decideFence) and the ben two-step scenario
 // data lives in demo/scenario.ts (referenced, not forked).
 //
 //   (a) decideFence on ben's stale `.email` write (lastSyncedVersion 7,
 //       currentVersion 8, deltas = the users.email->contact_email rename) -> DENY.
 //       The reason is the agent's self-correction INPUT: it names db.users, email,
-//       contact_email, and asha (RUBRIC line 18). No human types this.
+//       contact_email, and asha. No human types this.
 //   (b) decideFence on ben's NEXT write using `contact_email` (same versions /
 //       deltas) -> ALLOW. The self-corrected write passes the fence; no human
 //       input was injected between the two calls.
@@ -86,7 +86,7 @@ test("self-correction (a): ben's stale `.email` write -> DENY; reason names db.u
   assert.equal(decision.decision, "deny");
   if (decision.decision !== "deny") return; // narrow for TS
 
-  // The reason IS the self-correction payload. RUBRIC line 18: it names the
+  // The reason IS the self-correction payload: it names the
   // contract, the mechanical change (email -> contact_email), and the author.
   assert.match(decision.reason, /db\.users/, "reason names the contract");
   assert.match(decision.reason, /email/, "reason names the stale symbol");

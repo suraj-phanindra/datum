@@ -2,8 +2,8 @@
 //
 // Run: node --test test/drift-card.test.ts   (NO DOM, NO jsdom)
 //
-// Satisfies RUBRIC: "the drift card animates through detected, fenced, advised,
-// reconciling, reconciled, patched." The animation is driven by a PURE reducer
+// Acceptance check: the drift card animates through detected, fenced, advised,
+// reconciling, reconciled, patched. The animation is driven by a PURE reducer
 // (reduceDriftState) so we can exercise the whole arc without a browser.
 //
 // We feed the VERBATIM schema §9 event sequence (the workspace-invites

@@ -2,8 +2,9 @@
 //
 // Run: node --test test/deploy.test.ts
 //
-// Proves the RUBRIC line "the live URL returns 200 and shows the registry at v8"
-// AND the not-a-dashboard line ("a live URL shows v8 with no bus process"):
+// Verifies the acceptance check that the live URL returns 200 and shows the
+// registry at v8, and the observability-layer requirement that a live URL shows
+// v8 with no bus process running:
 //
 // Case 1 (snapshot is the frozen v8 end-state):
 //   (re)generate web/snapshot.json via the demo/seed-snapshot.ts builder, then
@@ -48,8 +49,8 @@ const REQUIRED_EVENT_TYPES = [
 
 test("deploy: seed-snapshot builds a frozen v8 end-state with the full event replay", async () => {
   // (re)generate the snapshot from the deterministic builder + write it to disk
-  // (the committed web/snapshot.json). RECONCILIATION gate 3: this regen runs
-  // the arbiter + spec-pr so the replay payloads are frozen before publishing.
+  // (the committed web/snapshot.json). This regen runs the arbiter + spec-pr so
+  // the replay payloads are frozen before publishing.
   // Build in an ISOLATED tmp repo dir (not the shared demo/workspace-invites/)
   // so this test never races demo-runner.test.ts under parallel `node --test`.
   const repoDir = mkdtempSync(join(tmpdir(), "datum-deploy-repo-"));
@@ -140,7 +141,7 @@ test("deploy: a pure static host serves GET / -> 200 and the page hydrates v8 wi
     // the static index.html carries the seeded end-state markup (v8) directly.
     assert.ok(html.includes("tower-root"), "the tower markup is present");
 
-    // the not-a-dashboard hydration path: snapshot.json is fetchable from the
+    // the static hydration path: snapshot.json is fetchable from the
     // static host and reads registry_version 8 (the client fetches ./snapshot.json
     // when no window.__DATUM__ embed is present). NO bus process is involved.
     const snapRes = await fetch(`${server.url}/snapshot.json`);

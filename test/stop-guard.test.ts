@@ -1,8 +1,8 @@
 // test/stop-guard.test.ts — the Stop guard acceptance test (stretch, P3).
 // Run: node --test test/stop-guard.test.ts
 //
-// Satisfies RUBRIC "Nice to have": "Stop hook prevents an agent from declaring
-// done while unacknowledged deltas intersect its diff."
+// Acceptance check: the Stop hook prevents an agent from declaring done while
+// unacknowledged deltas intersect its diff.
 //
 // Assertions:
 //   (1) session behind one epoch, claim_symbols incl 'user.email'/'.email', the
