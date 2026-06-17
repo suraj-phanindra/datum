@@ -31,7 +31,7 @@
     {
       "binding": "DB",
       "database_name": "datum-accounts",
-      "database_id": "REPLACE_WITH_d1_create_id"
+      "database_id": "8aeb5ab5-356e-41df-970d-827090cea2f7"
     }
   ],
   "queues": {

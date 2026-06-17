@@ -169,7 +169,9 @@ export async function handleFetch(
   if (path.startsWith("/w/")) {
     const rest = path.slice("/w/".length); // ":workspace_id/..."
     const slash = rest.indexOf("/");
-    const workspaceId = slash === -1 ? rest : rest.slice(0, slash);
+    // workspace_id is host/owner/repo, sent URL-encoded as a single path segment
+    // (datum login bakes encodeURIComponent(workspace_id) into the bus url).
+    const workspaceId = decodeURIComponent(slash === -1 ? rest : rest.slice(0, slash));
     if (!workspaceId) return json({ error: "missing workspace_id" }, 404);
 
     const principal = await authenticate(request, env);
