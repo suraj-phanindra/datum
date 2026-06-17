@@ -33,5 +33,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Build plugin bundles
+        run: npm run build:plugin
+
+      - name: Verify committed plugin bundles are up to date
+        run: git diff --exit-code plugin/lib
+
       - name: Demo
         run: npm run demo

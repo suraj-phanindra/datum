@@ -1,0 +1,30 @@
+{
+  "name": "datum",
+  "displayName": "Datum",
+  "version": "0.1.0",
+  "description": "The real-time coordination layer for teams running Claude Code agents against the same feature. Git coordinates code at rest; Datum coordinates agents in motion.",
+  "author": {
+    "name": "Datum"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/suraj-phanindra/datum",
+  "keywords": [
+    "coordination",
+    "agents",
+    "claude-code",
+    "contract-registry",
+    "hooks",
+    "mcp"
+  ],
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json",
+  "skills": "./skills/",
+  "userConfig": {
+    "bus_url": {
+      "type": "string",
+      "title": "Datum bus URL",
+      "description": "URL of the Datum bus this session coordinates against. Run the bus locally with 'datumctl serve'; teams point this at their shared bus.",
+      "default": "http://127.0.0.1:4317"
+    }
+  }
+}

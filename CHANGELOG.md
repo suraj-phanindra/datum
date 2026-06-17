@@ -21,6 +21,20 @@ devtool a stranger can land on, trust, and contribute to.
 - `docs/ROADMAP.md`, the north-star document defining the product vision, the
   open-core boundary (MIT core versus Datum Cloud), the target Cloudflare
   architecture, and the sequenced sub-projects.
+- A Claude Code plugin as the recommended install for Claude Code users
+  (`/plugin marketplace add suraj-phanindra/datum` then
+  `/plugin install datum@datum`). It bundles the four hooks (`datum-join`,
+  `datum-claim`, `datum-fence`, `datum-guard`), the MCP server, and five skills
+  (`coordinate`, `claim`, `sync`, `resolve-fence`, `decide`) so agents use Datum
+  natively with no separate `datumctl init`.
+- Three MCP tools (`datum_claim`, `datum_sync`, `datum_sessions`) so agents can
+  publish an intent manifest, review advisories and deltas since their last
+  sync, and see the live fleet, all from the session.
+- Zero-init self-seeding in the `datum-join` hook: when local state is missing or
+  incomplete, it seeds git-native identity (human, email, branch, and workspace
+  from git config, bus url from the committed `datum.json`) before registering
+  the session, so the plugin needs no separate `datumctl init`. The seed is
+  fail-soft and idempotent.
 
 ### Changed
 

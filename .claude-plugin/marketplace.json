@@ -1,0 +1,25 @@
+{
+  "name": "datum",
+  "owner": {
+    "name": "Datum"
+  },
+  "description": "The Datum coordination layer for teams running Claude Code agents.",
+  "plugins": [
+    {
+      "name": "datum",
+      "source": "./plugin",
+      "description": "Hooks, an MCP server, and skills that keep teammates' Claude Code agents in sync against a live contract registry.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Datum"
+      },
+      "license": "MIT",
+      "keywords": [
+        "coordination",
+        "agents",
+        "claude-code",
+        "contract-registry"
+      ]
+    }
+  ]
+}
