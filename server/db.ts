@@ -1,115 +1,25 @@
-// server/db.ts — open a SQLite database (node:sqlite, zero-install) and create
-// the 5 tables per schema.md §2. Synchronous throughout (DatabaseSync).
+// server/db.ts — open the OSS SQLite-backed Datum store.
+//
+// The SQLite driver, schema, and pragmas now live in server/sql-backend.ts so
+// the core can run on a second transport (the Cloudflare Durable Object's
+// ctx.storage.sql) unchanged. This file keeps the historical openDb/close
+// surface for the OSS bus + tests, producing a NodeSqliteBackend (a SqlBackend).
 //
 // In-process TS objects are camelCase; the wire/events are snake_case. The
 // SQLite columns mirror the schema.md field names (snake_case) verbatim so a
 // row read maps 1:1 to the on-the-wire shape.
 
-import { DatabaseSync } from "node:sqlite";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { NodeSqliteBackend, openNodeSqliteBackend } from "./sql-backend.ts";
 
-export type Database = DatabaseSync;
-
-const SCHEMA = `
--- contracts: the current truth, one row per contract (§2)
-CREATE TABLE IF NOT EXISTS contracts (
-  id              TEXT PRIMARY KEY,
-  name            TEXT NOT NULL,
-  type            TEXT NOT NULL,            -- ContractType
-  current_version INTEGER NOT NULL,         -- per-contract monotonic int
-  current_value   TEXT NOT NULL             -- JSON snapshot
-);
-
--- contract_versions: append-only history, one row per (contract, version) (§2)
-CREATE TABLE IF NOT EXISTS contract_versions (
-  contract_id      TEXT NOT NULL,
-  version          INTEGER NOT NULL,        -- per-contract version
-  epoch            INTEGER NOT NULL,        -- global registry_version at landing
-  author           TEXT NOT NULL,
-  ts               TEXT NOT NULL,           -- ISO 8601
-  why              TEXT NOT NULL,
-  mechanical_change TEXT NOT NULL,          -- JSON MechanicalChange
-  value_snapshot   TEXT NOT NULL,           -- JSON snapshot
-  PRIMARY KEY (contract_id, version)
-);
-
--- ledger: append-only decision history. id auto-increments but explicit ids are
--- allowed for seeding (#110/#111) so the next auto id is 112 (§9). (§2)
-CREATE TABLE IF NOT EXISTS ledger (
-  id          INTEGER PRIMARY KEY,          -- AUTOINCREMENT semantics via INTEGER PK
-  ts          TEXT NOT NULL,
-  author      TEXT NOT NULL,
-  description TEXT NOT NULL,
-  contract_id TEXT                          -- optional link
-);
-
--- sessions: a human + their agent, as one unit (§2 + §10).
--- workspace_id + email are the additive team columns (§10): OPTIONAL, defaulted,
--- so a pre-team db migrates cleanly (see migrateSessions below).
-CREATE TABLE IF NOT EXISTS sessions (
-  id                  TEXT PRIMARY KEY,
-  human               TEXT NOT NULL,
-  branch              TEXT NOT NULL,
-  claim_files         TEXT NOT NULL,        -- JSON string[]
-  claim_symbols       TEXT NOT NULL,        -- JSON string[]
-  last_synced_version INTEGER NOT NULL,
-  status              TEXT NOT NULL,        -- live|fenced|reconciling|reconciled|idle
-  workspace_id        TEXT NOT NULL DEFAULT '',  -- §10 the team key (host/owner/repo)
-  email               TEXT NOT NULL DEFAULT ''   -- §10 git-native identity
-);
-
--- events: the append-only bus log, source of truth for replay + tower (§2)
-CREATE TABLE IF NOT EXISTS events (
-  id      INTEGER PRIMARY KEY AUTOINCREMENT,
-  type    TEXT NOT NULL,
-  payload TEXT NOT NULL,                    -- JSON
-  ts      TEXT NOT NULL
-);
-
--- meta: single-row global state, holds the registry_version epoch (§1)
-CREATE TABLE IF NOT EXISTS meta (
-  key   TEXT PRIMARY KEY,
-  value TEXT NOT NULL
-);
-`;
+// The OSS store handle is a NodeSqliteBackend (a SqlBackend with close()).
+export type Database = NodeSqliteBackend;
 
 /**
  * Open (or create) the Datum database and ensure the schema exists.
  * @param path ':memory:' for tests, default '.datum/datum.db'.
  */
 export function openDb(path = ".datum/datum.db"): Database {
-  if (path !== ":memory:") {
-    mkdirSync(dirname(path), { recursive: true });
-  }
-  const db = new DatabaseSync(path);
-  db.exec("PRAGMA journal_mode = WAL;");
-  db.exec("PRAGMA foreign_keys = ON;");
-  db.exec(SCHEMA);
-  migrateSessions(db);
-  // Seed the epoch row once; never clobber an existing value.
-  db.prepare(
-    "INSERT OR IGNORE INTO meta (key, value) VALUES ('registry_version', '0')",
-  ).run();
-  return db;
-}
-
-/**
- * Additive migration (§10): older databases predate the sessions.workspace_id +
- * email columns. ADD COLUMN them if missing so a pre-team db keeps working. This
- * is idempotent — a fresh db already has them from SCHEMA, and PRAGMA
- * table_info tells us which to add.
- */
-function migrateSessions(db: Database): void {
-  const cols = (db.prepare("PRAGMA table_info(sessions)").all() as Array<{ name: string }>).map(
-    (c) => c.name,
-  );
-  if (!cols.includes("workspace_id")) {
-    db.exec("ALTER TABLE sessions ADD COLUMN workspace_id TEXT NOT NULL DEFAULT ''");
-  }
-  if (!cols.includes("email")) {
-    db.exec("ALTER TABLE sessions ADD COLUMN email TEXT NOT NULL DEFAULT ''");
-  }
+  return openNodeSqliteBackend(path);
 }
 
 /** Close the database handle. */
