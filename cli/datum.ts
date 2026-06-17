@@ -32,7 +32,7 @@ type Parsed = {
   flags: Record<string, string | boolean>;
 };
 
-const VALUE_FLAGS = new Set(["bus-url", "content", "symbols", "branch", "human", "files", "author", "contract", "port", "limit", "tool", "project-dir", "workspace", "host"]);
+const VALUE_FLAGS = new Set(["bus-url", "bus", "token", "content", "symbols", "branch", "human", "files", "author", "contract", "port", "limit", "tool", "project-dir", "workspace", "host"]);
 
 /**
  * Parse argv into { command, args, flags }. The first non-flag token is the
@@ -91,6 +91,13 @@ function resolveBusUrl(flags: Record<string, string | boolean>, stateBusUrl: str
   return DEFAULT_BUS_URL;
 }
 
+// cloud-mode bearer token: DATUM_TOKEN env > local state.token. Empty -> self-hosted
+// (BusClient sends no Authorization header). Persisted by `datum login`.
+function resolveToken(stateToken: string): string {
+  if (process.env.DATUM_TOKEN) return process.env.DATUM_TOKEN;
+  return stateToken || "";
+}
+
 // ---- main / run ----
 
 /**
@@ -108,12 +115,13 @@ export async function run(argv: string[]): Promise<number> {
   const dir = projectDir();
   const state = readStateOrDefault(dir);
   const busUrl = resolveBusUrl(flags, state.bus_url);
+  const token = resolveToken(state.token);
   const ctx: Ctx = {
     args,
     flags,
     json,
     busUrl,
-    bus: new BusClient(busUrl),
+    bus: new BusClient(busUrl, { token }),
     projectDir: dir,
     state,
     hasState: hasState(dir),

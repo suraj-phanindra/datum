@@ -135,7 +135,8 @@ function normalize2(raw) {
     last_synced_version: Number(raw.last_synced_version ?? 0),
     claim_files: Array.isArray(raw.claim_files) ? raw.claim_files.map(String) : [],
     claim_symbols: Array.isArray(raw.claim_symbols) ? raw.claim_symbols.map(String) : [],
-    bus_url: raw.bus_url || DEFAULT_BUS_URL2
+    bus_url: raw.bus_url || DEFAULT_BUS_URL2,
+    token: typeof raw.token === "string" ? raw.token : ""
   };
 }
 function writeState(state, dir = projectDir()) {

@@ -36,10 +36,18 @@ const DEFAULT_TIMEOUT_MS = 2000;
 export class BusClient {
   readonly url: string;
   private timeoutMs: number;
+  /** Cloud-mode bearer token. Empty = self-hosted (no Authorization header). */
+  private token: string;
 
-  constructor(busUrl: string, opts: { timeoutMs?: number } = {}) {
+  constructor(busUrl: string, opts: { timeoutMs?: number; token?: string } = {}) {
     this.url = busUrl.replace(/\/$/, "");
     this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.token = opts.token ?? "";
+  }
+
+  /** Authorization header iff a token is present; spread into every request. */
+  private authHeaders(): Record<string, string> {
+    return this.token ? { Authorization: `Bearer ${this.token}` } : {};
   }
 
   // ---- low-level fetch wrappers (never throw) ----
@@ -54,7 +62,10 @@ export class BusClient {
     try {
       const res = await fetch(`${this.url}${path}`, {
         method,
-        headers: body != null ? { "Content-Type": "application/json" } : undefined,
+        headers: {
+          ...(body != null ? { "Content-Type": "application/json" } : {}),
+          ...this.authHeaders(),
+        },
         body: body != null ? JSON.stringify(body) : undefined,
         signal: ctrl.signal,
       });
@@ -153,7 +164,7 @@ export class BusClient {
     (async () => {
       try {
         const res = await fetch(`${this.url}/stream`, {
-          headers: { Accept: "text/event-stream" },
+          headers: { Accept: "text/event-stream", ...this.authHeaders() },
           signal,
         });
         if (!res.ok || !res.body) {

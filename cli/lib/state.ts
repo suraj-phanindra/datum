@@ -10,6 +10,11 @@ import { join, dirname } from "node:path";
 export const DEFAULT_BUS_URL = "http://127.0.0.1:4317";
 
 // schema §8 + §10 (workspace_id + email are the additive team fields).
+//
+// `token` is the LOCAL-ONLY cloud-mode bearer credential (Datum Cloud). It lives
+// here in .datum/state.json (gitignored) and is NEVER written to the committed
+// datum.json, so authenticating one machine does not leak the secret to the team.
+// Empty string = self-hosted mode (no Authorization header).
 export type DatumState = {
   session_id: string;
   human: string;
@@ -20,6 +25,7 @@ export type DatumState = {
   claim_files: string[];
   claim_symbols: string[];
   bus_url: string;
+  token: string;
 };
 
 /** The project root that owns .datum/ + .claude/ (CLAUDE_PROJECT_DIR or cwd). */
@@ -80,6 +86,7 @@ function normalize(raw: Partial<DatumState>): DatumState {
     claim_files: Array.isArray(raw.claim_files) ? raw.claim_files.map(String) : [],
     claim_symbols: Array.isArray(raw.claim_symbols) ? raw.claim_symbols.map(String) : [],
     bus_url: raw.bus_url || DEFAULT_BUS_URL,
+    token: typeof raw.token === "string" ? raw.token : "",
   };
 }
 
