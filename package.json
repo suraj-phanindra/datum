@@ -1,6 +1,6 @@
 {
   "name": "datumctl",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "The real-time coordination layer for teams of developers running Claude Code agents. Git coordinates code at rest; Datum coordinates agents in motion.",
   "engines": {
