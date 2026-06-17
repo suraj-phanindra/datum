@@ -1,0 +1,65 @@
+name: Bug report
+description: Report a problem with Datum (datumctl, the hooks, the bus, the arbiter, or the tower).
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make Datum better. Please search existing issues first to avoid duplicates.
+        For usage questions (not bugs), use the links on the new-issue page instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, including any error output or denied-write reasons from the fence.
+      placeholder: |
+        The fence denied a write that should have been allowed, with reason "..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps so we can reproduce the behavior. Include the commands you ran.
+      placeholder: |
+        1. Run `npx datumctl init`
+        2. Run `datumctl serve`
+        3. Start a Claude Code session and edit `routes/users.ts`
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen instead.
+      placeholder: The write should have been allowed because the contract version matched.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Run the commands below and paste the output. This is required so we can match your setup.
+      value: |
+        - datumctl version (`datumctl --version` or `npx datumctl --version`):
+        - Node version (`node --version`):
+        - OS and version (e.g. macOS 15.4, Ubuntu 24.04, Windows 11):
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or output
+      description: Optional. Paste any bus output, hook output, or stack traces. This is automatically formatted as code.
+      render: shell
+    validations:
+      required: false

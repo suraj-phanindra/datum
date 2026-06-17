@@ -1,14 +1,14 @@
 # schema.md — the shared source of truth
 
-**Status: FROZEN for the build. Every track codes against this.** Changes require a note here + a ping to all tracks (this is the dogfood moment — do not drift field names).
+**Status: FROZEN. Every track codes against this.** Changes require a note here plus a ping to all tracks (this is the dogfood moment, so do not drift field names).
 
-This defines: the registry/version model, the data model (tables), the event types, the bus + MCP HTTP API, the contract-surface watchlist, the **fence decision function** (the deterministic heart), the **advisory shape**, and the local hook state. Sample data is the workspace-invites scenario, used **verbatim** everywhere.
+This defines: the registry/version model, the data model (tables), the event types, the bus plus MCP HTTP API, the contract-surface watchlist, the **fence decision function** (the deterministic heart), the **advisory shape**, and the local hook state. Sample data is the workspace-invites scenario, used **verbatim** everywhere.
 
 ---
 
 ## 1. Versioning model
 
-- **`registry_version`** — a single **global monotonic integer**, the workspace **epoch** / "current truth version." Increments by exactly **1** on every accepted contract-surface delta. This is the number RUBRIC checks (`registry advances to v8`) and the number the epoch strip renders. Seeded at **7**; asha's migration is the next delta → **8**.
+- **`registry_version`** — a single **global monotonic integer**, the workspace **epoch** / "current truth version." Increments by exactly **1** on every accepted contract-surface delta. This is the number the acceptance check asserts (registry advances to v8) and the number the epoch strip renders. Seeded at **7**; asha's migration is the next delta, taking it to **8**.
 - **per-contract `version`** — each contract carries its own monotonic counter, shown in the registry rail. These are independent of the epoch and need not equal it. Seeded: `db.users` **7→8**, `api.GET /users/:id` **3**, `api.POST /invites` **1**, `deps.db-driver` **2**.
 - The drift card header shows the **db.users** per-contract transition (`v7 → v8`); because asha's migration is epoch 8 *and* db.users's 8th version, the header tick and the epoch tick coincide. This alignment is a deliberate, honest seed arrangement for demo clarity.
 - A **session** tracks `last_synced_version` = the global `registry_version` it last pulled. The fence's cheap check is `last_synced_version === registry_version`.
@@ -148,7 +148,7 @@ Watchlist (path glob → type):
 - **dep_version**: `**/package.json`, `requirements.txt`, `go.mod`, `Cargo.toml` (**version changes only**).
 - **decision**: a `datum decide "..."` command, or an append to `**/DECISIONS.md`.
 
-A path match **plus a light parse** (which symbol/column/version changed) is enough. The demo's hero is the **rename_column** parse on `migrations/0042_*.sql`. Off-watchlist (e.g. `README.md`, `*.test.ts`) → `{ contractRelevant: false }` → **no version bump**. (Unit test: schema edit flagged, README not.)
+A path match **plus a light parse** (which symbol/column/version changed) is enough. The central case is the **rename_column** parse on `migrations/0042_*.sql`. Off-watchlist (e.g. `README.md`, `*.test.ts`) → `{ contractRelevant: false }` → **no version bump**. (Unit test: schema edit flagged, README not.)
 
 Version bump: `bumpRegistry(currentEpoch, delta) → currentEpoch + 1` (monotonic; only on `contractRelevant: true`). (Unit test.)
 
@@ -170,7 +170,7 @@ type Advisory = {
 };
 ```
 
-The two seeded advisories **must differ** (RUBRIC). Verbatim targets:
+The two seeded advisories **must differ** (the acceptance check asserts this). Verbatim targets:
 - **ben** (`routes/users.ts`, severity `fence`): "users.email is now contact_email (migration 0042, asha). Your open diff selects .email in two queries; update both before your next write."
 - **chen** (`UserCard.tsx`, severity `advisory`): "UserDTO.email renamed; regenerate types from the API client. UserCard.tsx line 18 reads user.email and will break at runtime."
 
@@ -198,7 +198,7 @@ type FenceDecision =
 Algorithm (deterministic, ≤ ~50ms; HTTP only when `lastSyncedVersion !== currentVersion`):
 1. If `lastSyncedVersion === currentVersion` → `allow` (fast path; nothing changed since sync).
 2. Else, for each delta in `deltas`, compute intersection with `write`:
-   - **stale-symbol hit (deny):** the write's `content` references a symbol the delta **renamed-away or removed** (e.g. delta `rename_column users.email→contact_email`; write contains `.email` / `users.email`). → `deny`, reason = "`{contract}.{from}` was renamed to `{to}` (migration {migration}, {author}, {Δt} ago). This {tool} references `.{from}` and will break. Re-sync to v{epoch} and use `{to}`." (names contract + mechanical change + author — RUBRIC requirement.)
+   - **stale-symbol hit (deny):** the write's `content` references a symbol the delta **renamed-away or removed** (e.g. delta `rename_column users.email→contact_email`; write contains `.email` / `users.email`). → `deny`, reason = "`{contract}.{from}` was renamed to `{to}` (migration {migration}, {author}, {Δt} ago). This {tool} references `.{from}` and will break. Re-sync to v{epoch} and use `{to}`." (names contract, mechanical change, and author, as the acceptance check requires.)
    - **area hit, no direct conflict (inject):** the write touches a file/module in the delta's scope but references no stale symbol. → `inject` the mechanical delta as `additionalContext`.
    - **no intersection (allow):** → `allow`.
 3. Precedence: any `deny` wins over `inject` wins over `allow`.
@@ -216,7 +216,7 @@ Unit tests:
 - Per-workspace state dir: `${CLAUDE_PROJECT_DIR}/.datum/`.
 - `state.json`: `{ session_id, human, branch, last_synced_version, claim_files, claim_symbols, bus_url }`.
 - Fence reads `last_synced_version` from here (cache hit). On a `GET /version` mismatch it pulls `/deltas?since=N`. **Long-poll** `/version/wait` keeps the cache warm so steady state is a local read (≈0 HTTP).
-- **Fail open:** bus unreachable or slow (timeout ~1s) → fence returns `allow` and writes a warning to `.datum/warnings.log` (surfaced on the tower's fleet footer). **Never brick an agent.** RUBRIC: "fence fires with the arbiter disabled" — the arbiter is a *separate* async service; the fence depends only on the bus + this local state.
+- **Fail open:** bus unreachable or slow (timeout ~1s) → fence returns `allow` and writes a warning to `.datum/warnings.log` (surfaced on the tower's fleet footer). **Never brick an agent.** The fence must fire with the arbiter disabled: the arbiter is a *separate* async service, and the fence depends only on the bus plus this local state.
 
 ---
 

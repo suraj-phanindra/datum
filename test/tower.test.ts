@@ -2,14 +2,15 @@
 //
 // Run: node --test test/tower.test.ts
 //
-// Case 1 (RUBRIC "the live URL returns 200 and shows the registry at v8"):
+// Case 1 (the live URL returns 200 and shows the registry at v8):
 //   start a SEEDED bus on an ephemeral port, applyEdit asha's migration so the
 //   epoch === 8, start the tower pointing at the bus, GET / -> HTTP 200 and the
 //   returned HTML contains the SERVER-SIDE-EMBEDDED snapshot with
 //   "registry_version":8 AND a db.users entry with "current_version":8.
 //
-// Case 2 (the NOT-A-DASHBOARD line): stop the tower and confirm the bus still
-//   answers GET /version with 8 — killing the tower changes nothing on the bus.
+// Case 2 (the read-only viewer is not load-bearing): stop the tower and confirm
+//   the bus still answers GET /version with 8. Killing the tower changes nothing
+//   on the bus.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -101,7 +102,7 @@ test("tower: GET / returns 200 and embeds the registry at v8; killing it leaves 
     assert.ok(html.includes('href="/tokens.css"'), "bundled tokens.css linked");
     assert.ok(html.includes('href="/tokens-shim.css"'), "tokens shim linked");
 
-    // ---- NOT-A-DASHBOARD: stop the tower; the bus is unaffected. ----
+    // ---- read-only viewer: stop the tower; the bus is unaffected. ----
     await tower.close();
     const afterTowerDown = await jget(`${bus.url}/version`);
     assert.equal(

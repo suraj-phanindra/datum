@@ -8,7 +8,7 @@
 //   - /assets/fonts/*.woff2 : the self-hosted Geist / Geist Mono webfonts.
 //
 // Run: node web/build-static.ts   (zero install; Node built-ins only)
-import { mkdirSync, rmSync, copyFileSync, readFileSync, writeFileSync, readdirSync, cpSync, existsSync } from "node:fs";
+import { mkdirSync, rmSync, copyFileSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -41,11 +41,6 @@ writeFileSync(join(DIST, "tokens.css"), tokenParts.join("\n\n"), "utf8");
 for (const f of readdirSync(DS_FONTS)) {
   if (f.endsWith(".woff2")) copyFileSync(join(DS_FONTS, f), join(DIST, "assets", "fonts", f));
 }
-
-// 5) bundle the self-playing demo reel under /reel (self-contained: index.html
-//    + its relative fonts). Served at <host>/reel/.
-const REEL = join(WEB, "reel");
-if (existsSync(REEL)) cpSync(REEL, join(DIST, "reel"), { recursive: true });
 
 const files = readdirSync(DIST);
 console.log(`built web/dist/ (${files.length} entries): ${files.join(", ")}`);

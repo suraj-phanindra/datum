@@ -1,9 +1,9 @@
 // test/spec-pr.test.ts — the spec-pr acceptance test (fully offline + deterministic).
 //
-// Satisfies RUBRIC: "The arbiter opens a real PR that patches docs/spec.md to
-// the new contract truth, with a linked ledger entry" (+ the `datum demo` clause
-// "one spec PR is opened"). Runs with useGh:false so it is deterministic and
-// touches no network and no GitHub (not-a-dashboard: the web app is stopped).
+// Acceptance check: the arbiter opens a real PR that patches docs/spec.md to
+// the new contract truth, with a linked ledger entry, and exactly one spec PR
+// is opened. Runs with useGh:false so it is deterministic and touches no
+// network and no GitHub (the web app is stopped).
 //
 // Flow: build a tmp git repo with a docs/spec.md fixture referencing
 // "users.email"; fire asha's hero delta through the real registry; call

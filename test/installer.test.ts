@@ -1,5 +1,4 @@
-// test/installer.test.ts — the hooks-installer acceptance run (track:
-// hooks-installer). Three groups:
+// test/installer.test.ts — the hooks-installer acceptance run. Three groups:
 //   1. init() wires .claude/settings.json (SessionStart/PostToolUse/PreToolUse
 //      EXEC-form node hooks under ${CLAUDE_PROJECT_DIR}, mcpServers.datum) and
 //      seeds .datum/state.json with bus_url.
@@ -275,7 +274,7 @@ test("installer: RESYNC round-trip — datum-claim streams asha's edit, epoch 7-
 
     // END-TO-END: ben (behind at v7) editing routes/users.ts selecting .email is
     // DENIED by the fence against the REAL delta the hook produced. This is the
-    // demo's money shot on the actual wired path.
+    // core behavior the scenario exercises on the actual wired path.
     const benDecision = decideFence({
       write: { path: "routes/users.ts", tool_name: "Edit", content: "const e = user.email;" },
       lastSyncedVersion: 7,

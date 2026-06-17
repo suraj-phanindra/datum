@@ -67,7 +67,7 @@ export function deltaMigration(delta: Delta): string | undefined {
 /**
  * The shared/cached prefix: the delta + the contract context. Byte-identical
  * for every recipient of the same delta, so it caches cleanly. This is the
- * arbiter's "system" — the judgment rubric plus the facts of the change.
+ * arbiter's "system" — the judgment criteria plus the facts of the change.
  */
 export function sharedPrefix(delta: Delta): TextBlock[] {
   const change = describeMechanicalChange(delta);

@@ -5,7 +5,7 @@
 //
 // Boots an EPHEMERAL in-process bus + seedScenario(store) at epoch 7, then drives
 // the workspace-invites scenario on the REAL deterministic path and asserts the
-// SIX RUBRIC predicates, printing a green checklist. Exits 0 only if ALL hold,
+// SIX acceptance predicates, printing a green checklist. Exits 0 only if ALL hold,
 // else exits 1 naming which failed.
 //
 // not-a-dashboard: this NEVER starts the web tower. The fence, advisory delivery,
@@ -17,7 +17,7 @@
 //   2. decideFence for ben's stale `.email` write -> DENY -> emit EXACTLY ONE
 //      write.fenced (predicate 2).
 //   3. run the arbiter (default real Opus modelClient; on ANY model error fall
-//      back to a deterministic fixture pair so the gate still exits 0, and LOG
+//      back to a deterministic fixture pair so the check still exits 0, and LOG
 //      which path ran) -> two advisory.delivered that DIFFER + name each
 //      recipient's file (predicates 3 + 4).
 //   4. ben's corrected contact_email write -> server reconciled (per-session);
@@ -61,7 +61,7 @@ import {
 const LEDGER_ID = 112;
 const BREAK = process.env.DATUM_DEMO_BREAK ?? "";
 
-// ---- the six predicates (RUBRIC / demo PRD acceptance) ----
+// ---- the six predicates (acceptance criteria) ----
 
 type PredicateKey =
   | "epoch_v8"
@@ -102,7 +102,7 @@ async function busGet(busUrl: string, path: string): Promise<Record<string, unkn
 //
 // schema §6 verbatim seeded bodies (ben fence / chen advisory). Returned as a
 // JSON {body, actions} blob so advise()'s parser yields exactly these. Each body
-// differs; each carries >=1 action. This keeps the gate green offline while the
+// differs; each carries >=1 action. This keeps the check green offline while the
 // real Opus client is exercised first and only swapped on error.
 
 const FIXTURE_BODY: Record<string, { body: string; actions: string[] }> = {
@@ -260,7 +260,7 @@ async function run(): Promise<number> {
 
     // ===== STEP 3: arbiter -> two advisories that DIFFER + name each file =====
     log("");
-    log("[3] arbiter delivers tailored advisories (real Opus, fixture on error)");
+    log("[3] arbiter delivers tailored advisories (real Opus, fixture on fallback)");
     const client = makeResilientClient(modelState);
     let advisories: Advisory[] = await runArbiter(store, delta, { modelClient: client });
     const sourceLabel = modelState.usedReal

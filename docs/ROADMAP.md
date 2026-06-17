@@ -97,16 +97,19 @@ a one-line swap if a different model returns.
 Each is an independent spec → plan → build cycle.
 
 ### WS0 — Repo professionalization
-Turn the hackathon artifact into a credible open-core devtool a stranger can land on,
-trust, and contribute to.
-- Archive Build-Day material to a `hackathon-v0.2.0` git tag, strip it from `main`
-  (BUILD_PLAN, RUBRIC, submission, workflows, session-log, SUMMARY, shotlist, reel,
-  the bundled design-system export).
+Turn the post-hackathon artifact into a credible open-core devtool a stranger can land
+on, trust, and contribute to.
+- Archive the hackathon material to a `hackathon-v0.2.0` git tag, strip it from `main`
+  (BUILD_PLAN, RUBRIC, submission, workflows, session-log, SUMMARY, shotlist, demo reel,
+  the build-process PRD index + reconciliation). Keep the design-system export and the
+  feature specs (cleaned of hackathon framing); they feed the dashboard work.
 - Rewrite README, CLAUDE.md, the pitch, and `docs/` as product, not submission.
 - Add `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`, issue /
-  PR templates, and GitHub Actions CI (`npm test` + `datum demo` as gates).
-- Stand up the open-core monorepo layout (`packages/` OSS core, `cloud/` hosted plane)
-  so later workstreams have a home.
+  PR templates, and GitHub Actions CI (`npm test` + `npm run build` + `npm run demo` as gates).
+- Add a `datum` bin alias (the published command is `datumctl`) so both invocations work.
+- Create the `cloud/` placeholder for the hosted plane. Defer extracting the OSS core
+  into `packages/` until WS2a needs shared packages, to avoid destabilizing the
+  published `datumctl` prematurely.
 
 ### WS1 — Claude Code Skills + plugin
 Make agents use Datum natively. A `.claude-plugin` bundling the hooks + MCP + a set of

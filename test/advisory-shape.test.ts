@@ -1,8 +1,8 @@
 // test/advisory-shape.test.ts — the arbiter acceptance test (offline + deterministic).
 //
-// Satisfies RUBRIC: "The arbiter produces two different advisories for two
+// Acceptance check: the arbiter produces two different advisories for two
 // different recipients from one delta, each written for that recipient's file
-// and task." Uses a FAKE modelClient returning canned, distinct prose keyed by
+// and task. Uses a FAKE modelClient returning canned, distinct prose keyed by
 // recipient, so the test never touches the network and is fully deterministic.
 //
 // Run: node --test test/advisory-shape.test.ts
@@ -75,7 +75,7 @@ test("arbiter: two distinct advisories for the hero delta (ben + chen)", async (
   assert.ok(ben, "ben got an advisory");
   assert.ok(chen, "chen got an advisory");
 
-  // bodies differ (RUBRIC).
+  // bodies differ per recipient.
   assert.notEqual(ben!.body, chen!.body, "ben.body !== chen.body");
 
   // each .file is the recipient's own file.
