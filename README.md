@@ -24,10 +24,33 @@ The model is never on the critical path: the fence fires with the arbiter disabl
 
 ## Install
 
+### Claude Code plugin (recommended)
+
+If you use Claude Code, install Datum as a plugin in one step:
+
+```
+/plugin marketplace add suraj-phanindra/datum
+/plugin install datum@datum
+```
+
+The plugin wires everything an agent needs to coordinate natively:
+
+- **The four hooks**: `datum-join` (SessionStart), `datum-claim` (PostToolUse), `datum-fence` (PreToolUse), and `datum-guard` (Stop).
+- **The MCP server**, so agents can read the registry and ledger and publish claims, syncs, and decisions.
+- **Five skills**, namespaced under `/datum:`, that teach the agent the coordination loop and drive the MCP tools: `coordinate`, `claim`, `sync`, `resolve-fence`, and `decide`.
+
+It is **zero-init**: the `datum-join` hook self-seeds git-native identity (human, email, branch, and workspace from your git config) on the first session, so there is no separate `datumctl init` step. Solo users get `http://127.0.0.1:4317` by default; teams get their bus from the committed `datum.json`.
+
+### Manual / non-plugin alternative
+
+If you are not on the Claude Code plugin path, install the CLI directly:
+
 ```bash
 npx datumctl init        # wire Claude Code hooks + MCP, seed local state
 datumctl serve           # start the coordination bus (point sessions here)
 ```
+
+Either way, `datumctl serve` runs the coordination bus that sessions point at.
 
 `datumctl` ships as a self-contained npm package with **zero runtime dependencies** (Node built-ins only). The installed hooks need **Node ≥ 18**; the bus (`datumctl serve`) uses `node:sqlite` and needs **Node ≥ 22.5**.
 
