@@ -7,20 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Professionalization work in progress: turning Datum into a credible open-core
-devtool a stranger can land on, trust, and contribute to.
+## [0.3.0] - 2026-06-17
+
+The Claude Code plugin, the open-core professionalization, and Datum Cloud: the
+hosted, multi-tenant backend on Cloudflare.
 
 ### Added
 
-- Open-source community documentation: `CONTRIBUTING.md`, `SECURITY.md`, and
-  `CODE_OF_CONDUCT.md`.
-- This `CHANGELOG.md`, following Keep a Changelog with semantic versioning.
-- GitHub issue and pull request templates.
-- GitHub Actions CI that runs the test suite and the headless demo as merge gates
-  (Node 24, the development and CI baseline).
-- `docs/ROADMAP.md`, the north-star document defining the product vision, the
-  open-core boundary (MIT core versus Datum Cloud), the target Cloudflare
-  architecture, and the sequenced sub-projects.
+- A `datum` command alias. The package still publishes as `datumctl`; both
+  invocations now work.
 - A Claude Code plugin as the recommended install for Claude Code users
   (`/plugin marketplace add suraj-phanindra/datum` then
   `/plugin install datum@datum`). It bundles the four hooks (`datum-join`,
@@ -30,17 +25,34 @@ devtool a stranger can land on, trust, and contribute to.
 - Three MCP tools (`datum_claim`, `datum_sync`, `datum_sessions`) so agents can
   publish an intent manifest, review advisories and deltas since their last
   sync, and see the live fleet, all from the session.
+- `datum login` and cloud mode: authenticate the CLI and hooks against a hosted
+  bus with a bearer token kept in local, gitignored state (never committed).
 - Zero-init self-seeding in the `datum-join` hook: when local state is missing or
   incomplete, it seeds git-native identity (human, email, branch, and workspace
   from git config, bus url from the committed `datum.json`) before registering
   the session, so the plugin needs no separate `datumctl init`. The seed is
   fail-soft and idempotent.
+- Datum Cloud, the hosted multi-tenant backend (in `cloud/`, its own package so
+  the OSS core stays zero-dependency): a per-workspace `WorkspaceBus` Durable
+  Object, a Worker router with GitHub-OAuth sessions and D1-backed bearer API
+  tokens, a D1 account plane, an async arbiter Queue, and a GitHub App for spec
+  PRs. CSWSH-hardened WebSocket fan-out.
+- Open-source community documentation: `CONTRIBUTING.md`, `SECURITY.md`,
+  `CODE_OF_CONDUCT.md`; this `CHANGELOG.md`; GitHub issue and pull request
+  templates; GitHub Actions CI (a `test` job and a `cloud` job); and
+  `docs/ROADMAP.md`, the north-star document defining the product vision, the
+  open-core boundary (MIT core versus Datum Cloud), the target Cloudflare
+  architecture, and the sequenced sub-projects.
 
 ### Changed
 
-- Rewrote `README.md` and `CLAUDE.md` as product documentation rather than
-  build notes, with the positioning, the install path, and the
-  detect/protect/judge architecture front and center.
+- Rewrote `README.md` and `CLAUDE.md` as product documentation rather than build
+  notes, with the positioning, the install path, and the detect/protect/judge
+  architecture front and center.
+- Introduced a `SqlBackend` abstraction under the `Store` so the same
+  coordination core (`Store`, `registry`, `watchlist`, `fence`, `reconcile`,
+  `routeBus`) runs on `node:sqlite` (self-hosted) and Durable Object SQLite
+  (Cloud) with no forked logic.
 
 ## [0.2.0]
 
@@ -116,6 +128,7 @@ The initial release: the coordination core.
   `.ts` extensions on relative imports, async/await), `node --test` suites, and
   an esbuild build (`scripts/build.mjs` to `dist/`).
 
-[Unreleased]: https://github.com/suraj-phanindra/datum/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/suraj-phanindra/datum/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/suraj-phanindra/datum/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/suraj-phanindra/datum/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/suraj-phanindra/datum/releases/tag/v0.1.0
