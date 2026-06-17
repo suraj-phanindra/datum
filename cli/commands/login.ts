@@ -18,6 +18,7 @@ import { readFileSync } from "node:fs";
 
 import type { Command, Ctx } from "./types.ts";
 import { patchState } from "../lib/state.ts";
+import { deriveWorkspaceId } from "../lib/git.ts";
 import { out, emitJson, ambient, synced, warn, mark, ident } from "../lib/format.ts";
 
 function str(v: string | boolean | undefined): string | undefined {
@@ -51,17 +52,26 @@ export const loginCommand: Command = {
     "copy the token it gives you, and paste it on stdin.",
   async run(ctx: Ctx) {
     // --bus wins; otherwise reuse the resolved bus url (state/env/default).
-    const bus = (str(ctx.flags.bus) || ctx.busUrl).replace(/\/$/, "");
-    if (!bus) {
+    const host = (str(ctx.flags.bus) || ctx.busUrl).replace(/\/$/, "");
+    if (!host) {
       warn("login: a hosted bus url is required, e.g. datum login --bus https://bus.datum.dev");
       return 1;
+    }
+
+    // Scope the bus url to this workspace as a single encoded path segment
+    // (/w/<encoded workspace_id>), unless it is already workspace-scoped. The hooks
+    // and client then use bus_url + path unchanged; the worker decodes the segment.
+    let bus = host;
+    if (!/\/w\//.test(host)) {
+      const ws = deriveWorkspaceId(ctx.projectDir);
+      if (ws) bus = `${host}/w/${encodeURIComponent(ws)}`;
     }
 
     let token = str(ctx.flags.token);
 
     // interactive path: print the login URL + instructions, then read the token.
     if (!token) {
-      const loginUrl = `${bus}/auth/login`;
+      const loginUrl = `${host}/auth/login`;
       if (!ctx.json) {
         out(`${mark()} authenticate at ${ident(loginUrl)}`);
         out(ambient("  1. open the url above in your browser and sign in"));
@@ -84,7 +94,7 @@ export const loginCommand: Command = {
     }
 
     out(
-      `${mark()} ${synced("logged in")} to ${ident(bus)} ` +
+      `${mark()} ${synced("logged in")} to ${ident(host)} ` +
         ambient(`(token ${mask(token)})`),
     );
     out(ambient("  the CLI + hooks now run in cloud mode against that bus."));

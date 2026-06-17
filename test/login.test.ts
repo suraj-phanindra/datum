@@ -15,6 +15,7 @@ import { createServer, type Server } from "node:http";
 
 import { run } from "../cli/datum.ts";
 import { readState, statePath } from "../cli/lib/state.ts";
+import { deriveWorkspaceId } from "../cli/lib/git.ts";
 import { configPath, writeConfig } from "../cli/lib/config.ts";
 import { BusClient } from "../cli/lib/client.ts";
 import { disableColor } from "../cli/lib/format.ts";
@@ -64,7 +65,12 @@ test("login --bus --token writes bus_url + token to local state (temp dir)", asy
 
     const state = readState(dir);
     assert.ok(state, "local state.json was written");
-    assert.equal(state!.bus_url, "https://bus.datum.dev", "bus_url persisted to local state");
+    const ws = deriveWorkspaceId(dir);
+    assert.equal(
+      state!.bus_url,
+      `https://bus.datum.dev/w/${encodeURIComponent(ws)}`,
+      "bus_url scoped to the workspace (/w/<encoded id>)",
+    );
     assert.equal(state!.token, TOKEN, "token persisted to local state");
     assert.ok(existsSync(statePath(dir)), "state file lives under .datum/");
   } finally {
