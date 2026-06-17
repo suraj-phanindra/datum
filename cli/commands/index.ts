@@ -6,6 +6,7 @@ import type { Command } from "./types.ts";
 import { helpCommand } from "./help.ts";
 import { versionCommand } from "./version.ts";
 import { initCommand } from "./init.ts";
+import { loginCommand } from "./login.ts";
 import { doctorCommand } from "./doctor.ts";
 import { uninstallCommand } from "./uninstall.ts";
 import { statusCommand } from "./status.ts";
@@ -30,6 +31,7 @@ export const COMMAND_LIST: Command[] = [
   helpCommand,
   versionCommand,
   initCommand,
+  loginCommand,
   doctorCommand,
   uninstallCommand,
   // cockpit (daily driver)

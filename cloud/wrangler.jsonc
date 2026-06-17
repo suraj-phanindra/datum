@@ -1,0 +1,49 @@
+{
+  // Datum Cloud: hosted multi-tenant bus on Cloudflare.
+  // One WorkspaceBus Durable Object per workspace (SQLite-backed), a D1 account
+  // plane, and an async arbiter Queue. See docs/specs/ws2a-cloud-backend.md.
+  //
+  // Secrets (NEVER put these here; set with `wrangler secret put <NAME>`):
+  //   GITHUB_CLIENT_ID            : GitHub OAuth app client id (dashboard login)
+  //   GITHUB_CLIENT_SECRET        : GitHub OAuth app client secret
+  //   SESSION_JWT_SECRET          : HS256 secret for the session JWT
+  //   GITHUB_APP_ID               : GitHub App id (server-side spec PRs)
+  //   GITHUB_APP_PRIVATE_KEY      : GitHub App PKCS8 private key (RS256)
+  //   GITHUB_APP_INSTALLATION_ID  : GitHub App installation id
+  //   ANTHROPIC_API_KEY           : pooled key for the arbiter (claude-opus-4-8)
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "datum",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "WORKSPACE_BUS", "class_name": "WorkspaceBus" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["WorkspaceBus"] }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "datum-accounts",
+      "database_id": "REPLACE_WITH_d1_create_id"
+    }
+  ],
+  "queues": {
+    "producers": [
+      { "queue": "datum-arbiter", "binding": "ARBITER_QUEUE" }
+    ],
+    "consumers": [
+      {
+        "queue": "datum-arbiter",
+        "max_retries": 3,
+        "dead_letter_queue": "datum-arbiter-dlq"
+      }
+    ]
+  }
+}

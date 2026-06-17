@@ -16,13 +16,14 @@ import type { Store, Delta } from "../store.ts";
 import { intersect } from "./intersect.ts";
 import { advise } from "./advise.ts";
 import type { Advisory, ModelClient } from "./advise.ts";
+import { defaultModelClient } from "./model-client-node.ts";
 
 export type RunArbiterOptions = {
   modelClient?: ModelClient;
 };
 
 /**
- * runArbiter — fan out advisories for a delta to every intersecting recipient,
+ * runArbiter: fan out advisories for a delta to every intersecting recipient,
  * append an `advisory.delivered` event per recipient, and return the
  * advisories. Recipients are deterministic + author-excluded; advisory prose is
  * the only model-driven part.
@@ -35,11 +36,15 @@ export async function runArbiter(
   const sessions = store.listSessions();
   const recipients = intersect(delta, sessions);
 
+  // advise() requires a model client; default to the OSS node-backed client
+  // (Anthropic fetch + `claude` CLI fallback) when the caller does not inject one.
+  const modelClient = opts.modelClient ?? defaultModelClient;
+
   // advise() per pair. Run sequentially-collected (Promise.all) — they share
   // the cached prefix, so concurrency is fine; the canonical recipient ORDER is
   // preserved by mapping over the deterministic recipient list.
   const advisories = await Promise.all(
-    recipients.map((session) => advise(delta, session, opts.modelClient)),
+    recipients.map((session) => advise(delta, session, modelClient)),
   );
 
   // one advisory.delivered event per recipient (schema §3 payload shape:
@@ -58,7 +63,8 @@ export async function runArbiter(
 }
 
 // re-export the surface so callers import everything from the arbiter index.
-export { advise, defaultModelClient } from "./advise.ts";
+export { advise } from "./advise.ts";
+export { defaultModelClient } from "./model-client-node.ts";
 export type { Advisory, ModelClient, Severity, DeltaRef } from "./advise.ts";
 export { intersect, intersectingSessions } from "./intersect.ts";
 export { buildPrompt } from "./prompt.ts";
