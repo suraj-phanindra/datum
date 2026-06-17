@@ -7,9 +7,9 @@
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from "node:http";
 import { URL } from "node:url";
 import { openDb, close as closeDb, type Database } from "./db.ts";
-import { Store, type Event, type Session, type EventType } from "./store.ts";
-import { applyEdit, deltaToPayload, type StreamedEdit } from "./registry.ts";
+import { Store, type Event } from "./store.ts";
 import { Reconciler } from "./reconcile.ts";
+import { routeBus, type BusBroadcast } from "./router.ts";
 
 export type BusHandle = {
   url: string;
@@ -40,8 +40,11 @@ export function createBus(opts: StartOptions = {}): Promise<BusHandle> {
   // long-poll waiters on /version/wait, resolved on any epoch bump.
   const versionWaiters = new Set<() => void>();
 
-  function broadcast(ev: Event): void {
-    const frame = `id: ${ev.id}\nevent: ${ev.type}\ndata: ${JSON.stringify(ev)}\n\n`;
+  function broadcast(ev: Event | BusBroadcast): void {
+    // The SSE `data` is the full event object (watchers de-dupe by `id`); the
+    // router carries id + ts through on every broadcast so the frame is
+    // byte-identical to the inline bus.
+    const frame = `id: ${(ev as Event).id}\nevent: ${ev.type}\ndata: ${JSON.stringify(ev)}\n\n`;
     for (const c of sseClients) {
       try {
         c.res.write(frame);
@@ -67,15 +70,9 @@ export function createBus(opts: StartOptions = {}): Promise<BusHandle> {
     const u = new URL(req.url ?? "/", "http://127.0.0.1");
     const path = u.pathname;
 
-    // ---- GET /healthz ----
-    if (method === "GET" && path === "/healthz") {
-      return sendJson(res, 200, { ok: true });
-    }
-
-    // ---- GET /version ----
-    if (method === "GET" && path === "/version") {
-      return sendJson(res, 200, { registry_version: store.getVersion() });
-    }
+    // ==== STREAMING + transport-specific routes (stay in the bus) ====
+    // These hold the connection (long-poll / SSE) and own the version-waiter +
+    // SSE-client plumbing; they cannot be expressed as a plain BusResult.
 
     // ---- GET /version/wait?since=N&timeout=ms ----
     if (method === "GET" && path === "/version/wait") {
@@ -108,46 +105,6 @@ export function createBus(opts: StartOptions = {}): Promise<BusHandle> {
       return;
     }
 
-    // ---- GET /registry ----
-    if (method === "GET" && path === "/registry") {
-      return sendJson(res, 200, {
-        registry_version: store.getVersion(),
-        contracts: store.listContracts(),
-      });
-    }
-
-    // ---- GET /sessions (live roster — read-only; cockpit status uses it) ----
-    if (method === "GET" && path === "/sessions") {
-      return sendJson(res, 200, { sessions: store.listSessions() });
-    }
-
-    // ---- GET /events?since=N (the bus log; cockpit log/ledger uses it) ----
-    if (method === "GET" && path === "/events") {
-      const since = numParam(u, "since", 0);
-      return sendJson(res, 200, { events: store.getEventsSince(since) });
-    }
-
-    // ---- GET /ledger (decision history for `datum log`) ----
-    if (method === "GET" && path === "/ledger") {
-      return sendJson(res, 200, { ledger: store.listLedger() });
-    }
-
-    // ---- GET /contracts/:id/versions (history for `datum show`/`datum diff`) ----
-    const verMatch = /^\/contracts\/(.+)\/versions$/.exec(path);
-    if (method === "GET" && verMatch) {
-      const cid = decodeURIComponent(verMatch[1]);
-      return sendJson(res, 200, {
-        contract: store.getContract(cid) ?? null,
-        versions: store.listContractVersions(cid),
-      });
-    }
-
-    // ---- GET /deltas?since=N ----
-    if (method === "GET" && path === "/deltas") {
-      const since = numParam(u, "since", 0);
-      return sendJson(res, 200, { deltas: store.getDeltasSince(since) });
-    }
-
     // ---- GET /stream (SSE) ----
     if (method === "GET" && path === "/stream") {
       res.writeHead(200, {
@@ -162,185 +119,25 @@ export function createBus(opts: StartOptions = {}): Promise<BusHandle> {
       return;
     }
 
-    // ---- GET /sessions/:id/advisories ----
-    const advMatch = /^\/sessions\/([^/]+)\/advisories$/.exec(path);
-    if (method === "GET" && advMatch) {
-      const sid = decodeURIComponent(advMatch[1]);
-      const advisories = store
-        .getEventsSince(0)
-        .filter(
-          (e) =>
-            e.type === "advisory.delivered" &&
-            (e.payload as { session_id?: string }).session_id === sid,
-        )
-        .map((e) => (e.payload as { advisory?: unknown }).advisory ?? e.payload);
-      return sendJson(res, 200, { advisories });
-    }
+    // ==== NON-STREAMING routes: delegate to the transport-agnostic router ====
+    // routeBus runs the exact same Store / registry / reconcile calls and
+    // returns status + JSON body, the events to broadcast, and whether the
+    // registry version bumped. The bus then writes the response and performs
+    // the transport side effects (SSE fan-out, version-waiter wakeups).
+    const body = method === "POST" || method === "PATCH" ? await readJson(req) : undefined;
+    const result = routeBus(store, reconciler, {
+      method,
+      path,
+      query: u.searchParams,
+      body,
+    });
 
-    // ---- POST /sessions ----
-    if (method === "POST" && path === "/sessions") {
-      const body = await readJson(req);
-      const sessionWorkspace = String(body.workspace_id ?? "");
-      const session: Session = {
-        id: String(body.session_id ?? body.id ?? ""),
-        human: String(body.human ?? ""),
-        email: String(body.email ?? ""),
-        branch: String(body.branch ?? ""),
-        workspace_id: sessionWorkspace,
-        claim_files: asStringArray(body.claim_files),
-        claim_symbols: asStringArray(body.claim_symbols),
-        last_synced_version: store.getVersion(),
-        status: "live",
-      };
-      store.upsertSession(session);
+    // transport side effects: fan out the returned events over SSE, then wake
+    // /version/wait long-pollers (and, where wired, the async arbiter) on a bump.
+    for (const ev of result.broadcast ?? []) broadcast(ev);
+    if (result.versionBumped) wakeVersionWaiters();
 
-      // §10: the bus is single-registry per team. Adopt the first workspace_id it
-      // sees; warn (never block) a session that joins with a DIFFERENT one.
-      const served = store.adoptWorkspace(sessionWorkspace);
-      let warning: string | undefined;
-      if (sessionWorkspace && served && sessionWorkspace !== served) {
-        warning = `this bus serves ${served}, you are in ${sessionWorkspace}`;
-      }
-
-      const joined = store.addEvent("session.joined", {
-        session_id: session.id,
-        human: session.human,
-        email: session.email,
-        branch: session.branch,
-        workspace_id: session.workspace_id,
-        claim_files: session.claim_files,
-        claim_symbols: session.claim_symbols,
-        registry_version: store.getVersion(),
-      });
-      broadcast(joined);
-      const claim = store.addEvent("claim.published", {
-        session_id: session.id,
-        human: session.human,
-        claim_files: session.claim_files,
-        claim_symbols: session.claim_symbols,
-      });
-      broadcast(claim);
-      const advisories = store
-        .getEventsSince(0)
-        .filter(
-          (e) =>
-            e.type === "advisory.delivered" &&
-            (e.payload as { session_id?: string }).session_id === session.id,
-        )
-        .map((e) => (e.payload as { advisory?: unknown }).advisory ?? e.payload);
-      return sendJson(res, 200, {
-        registry_version: store.getVersion(),
-        workspace_id: served,
-        snapshot: { registry_version: store.getVersion(), contracts: store.listContracts() },
-        advisories,
-        ...(warning ? { warning } : {}),
-      });
-    }
-
-    // ---- PATCH /sessions/:id ----
-    const patchMatch = /^\/sessions\/([^/]+)$/.exec(path);
-    if (method === "PATCH" && patchMatch) {
-      const sid = decodeURIComponent(patchMatch[1]);
-      const body = await readJson(req);
-      const patch: Partial<Omit<Session, "id">> = {};
-      if (body.human != null) patch.human = String(body.human);
-      if (body.email != null) patch.email = String(body.email);
-      if (body.branch != null) patch.branch = String(body.branch);
-      if (body.workspace_id != null) patch.workspace_id = String(body.workspace_id);
-      if (body.claim_files != null) patch.claim_files = asStringArray(body.claim_files);
-      if (body.claim_symbols != null) patch.claim_symbols = asStringArray(body.claim_symbols);
-      if (body.last_synced_version != null) patch.last_synced_version = Number(body.last_synced_version);
-      if (body.status != null) patch.status = body.status as Session["status"];
-
-      const updated = store.patchSession(sid, patch);
-      if (!updated) {
-        // fail open: register a thin session if it didn't exist yet.
-        return sendJson(res, 200, { ok: false, registry_version: store.getVersion() });
-      }
-      if (patch.claim_files != null || patch.claim_symbols != null) {
-        const claim = store.addEvent("claim.published", {
-          session_id: updated.id,
-          human: updated.human,
-          claim_files: updated.claim_files,
-          claim_symbols: updated.claim_symbols,
-        });
-        broadcast(claim);
-      }
-      return sendJson(res, 200, { ok: true, registry_version: store.getVersion() });
-    }
-
-    // ---- POST /events ----
-    if (method === "POST" && path === "/events") {
-      const body = await readJson(req);
-      const type = String(body.type ?? "edit.streamed") as EventType;
-      const payload = (body.payload ?? body) as Record<string, unknown>;
-
-      // 1) append the raw event to the bus log + broadcast it.
-      const raw = store.addEvent(type, payload);
-      broadcast(raw);
-
-      let delta;
-      // 2) only an edit.streamed runs the watchlist parse / may bump.
-      if (type === "edit.streamed") {
-        const edit = payload as StreamedEdit;
-        const beforeEpoch = store.getVersion();
-        const result = applyEdit(store, edit);
-        delta = result.delta;
-
-        if (delta) {
-          // broadcast the delta.detected event applyEdit appended.
-          const deltaEvents = store
-            .getEventsSince(raw.id)
-            .filter((e) => e.type === "delta.detected");
-          for (const de of deltaEvents) broadcast(de);
-          // register fence tracking for intersecting consumers.
-          reconciler.onDelta(delta);
-        }
-
-        if (store.getVersion() > beforeEpoch) wakeVersionWaiters();
-
-        // 3) reconcile path: a clean write from a previously-fenced session.
-        const sessionId = String(edit.session_id ?? "");
-        if (sessionId) {
-          const content = String(edit.after ?? edit.content ?? edit.summary ?? "");
-          const recEvents = reconciler.onEdit({
-            sessionId,
-            human: edit.human,
-            path: edit.path,
-            content,
-          });
-          for (const re of recEvents) broadcast(re);
-        }
-      }
-
-      return sendJson(res, 200, {
-        ok: true,
-        registry_version: store.getVersion(),
-        ...(delta ? { delta: deltaToPayload(delta) } : {}),
-      });
-    }
-
-    // ---- POST /decide (epoch-NEUTRAL) ----
-    if (method === "POST" && path === "/decide") {
-      const body = await readJson(req);
-      const author = String(body.author ?? "");
-      const description = String(body.description ?? "");
-      const contract = body.contract != null ? String(body.contract) : undefined;
-      const ledgerId = store.addLedger({
-        ts: new Date().toISOString(),
-        author,
-        description,
-        contract_id: contract,
-      });
-      // epoch unchanged; return the CURRENT registry_version.
-      return sendJson(res, 200, {
-        ledger_id: ledgerId,
-        registry_version: store.getVersion(),
-      });
-    }
-
-    // ---- not found ----
-    return sendJson(res, 404, { ok: false, error: "not found" });
+    return sendJson(res, result.status, result.body);
   }
 
   return new Promise<BusHandle>((resolve) => {
@@ -416,17 +213,4 @@ function numParam(u: URL, key: string, fallback: number): number {
   if (v == null) return fallback;
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
-}
-
-function asStringArray(v: unknown): string[] {
-  if (Array.isArray(v)) return v.map(String);
-  if (typeof v === "string" && v.length > 0) {
-    try {
-      const parsed = JSON.parse(v);
-      if (Array.isArray(parsed)) return parsed.map(String);
-    } catch {
-      return [v];
-    }
-  }
-  return [];
 }
