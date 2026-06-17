@@ -7,7 +7,7 @@
 // ClassifyResult/MechanicalChange in-process objects are camelCase and mapped to
 // snake_case event payloads explicitly.
 
-import type { Database } from "./db.ts";
+import type { SqlBackend } from "./sql-backend.ts";
 
 // ---- §2 data model types (snake_case, verbatim from schema.md) ----
 
@@ -97,28 +97,28 @@ export type Delta = {
 // ---- Store ----
 
 export class Store {
-  private db: Database;
+  private db: SqlBackend;
 
-  constructor(db: Database) {
+  constructor(db: SqlBackend) {
     this.db = db;
   }
 
   // ---- registry version (global epoch) ----
 
   getVersion(): number {
-    const row = this.db
-      .prepare("SELECT value FROM meta WHERE key = 'registry_version'")
-      .get() as { value: string } | undefined;
+    const row = (this.db
+      .all("SELECT value FROM meta WHERE key = 'registry_version'")[0] ?? undefined) as
+      | { value: string }
+      | undefined;
     return row ? Number(row.value) : 0;
   }
 
   setVersion(epoch: number): void {
-    this.db
-      .prepare(
-        "INSERT INTO meta (key, value) VALUES ('registry_version', ?) " +
-          "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-      )
-      .run(String(epoch));
+    this.db.run(
+      "INSERT INTO meta (key, value) VALUES ('registry_version', ?) " +
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      String(epoch),
+    );
   }
 
   // ---- workspace (§10): the bus is single-registry per team. It adopts the
@@ -126,9 +126,10 @@ export class Store {
 
   /** The workspace this bus serves, or "" if no session has named one yet. */
   getWorkspace(): string {
-    const row = this.db
-      .prepare("SELECT value FROM meta WHERE key = 'workspace_id'")
-      .get() as { value: string } | undefined;
+    const row = (this.db
+      .all("SELECT value FROM meta WHERE key = 'workspace_id'")[0] ?? undefined) as
+      | { value: string }
+      | undefined;
     return row ? row.value : "";
   }
 
@@ -142,68 +143,67 @@ export class Store {
     if (!id) return this.getWorkspace();
     const current = this.getWorkspace();
     if (current) return current;
-    this.db
-      .prepare(
-        "INSERT INTO meta (key, value) VALUES ('workspace_id', ?) " +
-          "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-      )
-      .run(id);
+    this.db.run(
+      "INSERT INTO meta (key, value) VALUES ('workspace_id', ?) " +
+        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      id,
+    );
     return id;
   }
 
   // ---- contracts ----
 
   upsertContract(c: Contract): void {
-    this.db
-      .prepare(
-        "INSERT INTO contracts (id, name, type, current_version, current_value) " +
-          "VALUES (?, ?, ?, ?, ?) " +
-          "ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, " +
-          "current_version=excluded.current_version, current_value=excluded.current_value",
-      )
-      .run(c.id, c.name, c.type, c.current_version, c.current_value);
+    this.db.run(
+      "INSERT INTO contracts (id, name, type, current_version, current_value) " +
+        "VALUES (?, ?, ?, ?, ?) " +
+        "ON CONFLICT(id) DO UPDATE SET name=excluded.name, type=excluded.type, " +
+        "current_version=excluded.current_version, current_value=excluded.current_value",
+      c.id,
+      c.name,
+      c.type,
+      c.current_version,
+      c.current_value,
+    );
   }
 
   getContract(id: string): Contract | undefined {
-    const row = this.db
-      .prepare("SELECT * FROM contracts WHERE id = ?")
-      .get(id) as Contract | undefined;
+    const row = (this.db
+      .all("SELECT * FROM contracts WHERE id = ?", id)[0] ?? undefined) as
+      | Contract
+      | undefined;
     return row;
   }
 
   listContracts(): Contract[] {
     return this.db
-      .prepare("SELECT * FROM contracts ORDER BY id")
-      .all() as Contract[];
+      .all("SELECT * FROM contracts ORDER BY id") as Contract[];
   }
 
   // ---- contract_versions ----
 
   addContractVersion(cv: ContractVersion): void {
-    this.db
-      .prepare(
-        "INSERT INTO contract_versions " +
-          "(contract_id, version, epoch, author, ts, why, mechanical_change, value_snapshot) " +
-          "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      )
-      .run(
-        cv.contract_id,
-        cv.version,
-        cv.epoch,
-        cv.author,
-        cv.ts,
-        cv.why,
-        JSON.stringify(cv.mechanical_change),
-        cv.value_snapshot,
-      );
+    this.db.run(
+      "INSERT INTO contract_versions " +
+        "(contract_id, version, epoch, author, ts, why, mechanical_change, value_snapshot) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      cv.contract_id,
+      cv.version,
+      cv.epoch,
+      cv.author,
+      cv.ts,
+      cv.why,
+      JSON.stringify(cv.mechanical_change),
+      cv.value_snapshot,
+    );
   }
 
   listContractVersions(contractId: string): ContractVersion[] {
     const rows = this.db
-      .prepare(
+      .all(
         "SELECT * FROM contract_versions WHERE contract_id = ? ORDER BY version",
-      )
-      .all(contractId) as Array<Omit<ContractVersion, "mechanical_change"> & { mechanical_change: string }>;
+        contractId,
+      ) as Array<Omit<ContractVersion, "mechanical_change"> & { mechanical_change: string }>;
     return rows.map((r) => ({
       ...r,
       mechanical_change: JSON.parse(r.mechanical_change) as MechanicalChange,
@@ -219,28 +219,33 @@ export class Store {
    */
   addLedger(entry: { id?: number; ts: string; author: string; description: string; contract_id?: string }): number {
     if (entry.id != null) {
-      this.db
-        .prepare(
-          "INSERT INTO ledger (id, ts, author, description, contract_id) VALUES (?, ?, ?, ?, ?)",
-        )
-        .run(entry.id, entry.ts, entry.author, entry.description, entry.contract_id ?? null);
+      this.db.run(
+        "INSERT INTO ledger (id, ts, author, description, contract_id) VALUES (?, ?, ?, ?, ?)",
+        entry.id,
+        entry.ts,
+        entry.author,
+        entry.description,
+        entry.contract_id ?? null,
+      );
       return entry.id;
     }
     // Compute next id as max(existing)+1 (>=1) so it survives explicit seeding.
-    const maxRow = this.db
-      .prepare("SELECT COALESCE(MAX(id), 0) AS m FROM ledger")
-      .get() as { m: number };
+    const maxRow = (this.db
+      .all("SELECT COALESCE(MAX(id), 0) AS m FROM ledger")[0] ?? undefined) as { m: number };
     const nextId = Math.max(maxRow.m + 1, 1);
-    this.db
-      .prepare(
-        "INSERT INTO ledger (id, ts, author, description, contract_id) VALUES (?, ?, ?, ?, ?)",
-      )
-      .run(nextId, entry.ts, entry.author, entry.description, entry.contract_id ?? null);
+    this.db.run(
+      "INSERT INTO ledger (id, ts, author, description, contract_id) VALUES (?, ?, ?, ?, ?)",
+      nextId,
+      entry.ts,
+      entry.author,
+      entry.description,
+      entry.contract_id ?? null,
+    );
     return nextId;
   }
 
   getLedger(id: number): LedgerEntry | undefined {
-    const row = this.db.prepare("SELECT * FROM ledger WHERE id = ?").get(id) as
+    const row = (this.db.all("SELECT * FROM ledger WHERE id = ?", id)[0] ?? undefined) as
       | (LedgerEntry & { contract_id: string | null })
       | undefined;
     if (!row) return undefined;
@@ -249,39 +254,35 @@ export class Store {
 
   listLedger(): LedgerEntry[] {
     const rows = this.db
-      .prepare("SELECT * FROM ledger ORDER BY id DESC")
-      .all() as Array<LedgerEntry & { contract_id: string | null }>;
+      .all("SELECT * FROM ledger ORDER BY id DESC") as Array<LedgerEntry & { contract_id: string | null }>;
     return rows.map((r) => ({ ...r, contract_id: r.contract_id ?? undefined }));
   }
 
   // ---- sessions ----
 
   upsertSession(s: Session): void {
-    this.db
-      .prepare(
-        "INSERT INTO sessions " +
-          "(id, human, branch, claim_files, claim_symbols, last_synced_version, status, workspace_id, email) " +
-          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-          "ON CONFLICT(id) DO UPDATE SET human=excluded.human, branch=excluded.branch, " +
-          "claim_files=excluded.claim_files, claim_symbols=excluded.claim_symbols, " +
-          "last_synced_version=excluded.last_synced_version, status=excluded.status, " +
-          "workspace_id=excluded.workspace_id, email=excluded.email",
-      )
-      .run(
-        s.id,
-        s.human,
-        s.branch,
-        JSON.stringify(s.claim_files),
-        JSON.stringify(s.claim_symbols),
-        s.last_synced_version,
-        s.status,
-        s.workspace_id ?? "",
-        s.email ?? "",
-      );
+    this.db.run(
+      "INSERT INTO sessions " +
+        "(id, human, branch, claim_files, claim_symbols, last_synced_version, status, workspace_id, email) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+        "ON CONFLICT(id) DO UPDATE SET human=excluded.human, branch=excluded.branch, " +
+        "claim_files=excluded.claim_files, claim_symbols=excluded.claim_symbols, " +
+        "last_synced_version=excluded.last_synced_version, status=excluded.status, " +
+        "workspace_id=excluded.workspace_id, email=excluded.email",
+      s.id,
+      s.human,
+      s.branch,
+      JSON.stringify(s.claim_files),
+      JSON.stringify(s.claim_symbols),
+      s.last_synced_version,
+      s.status,
+      s.workspace_id ?? "",
+      s.email ?? "",
+    );
   }
 
   getSession(id: string): Session | undefined {
-    const row = this.db.prepare("SELECT * FROM sessions WHERE id = ?").get(id) as
+    const row = (this.db.all("SELECT * FROM sessions WHERE id = ?", id)[0] ?? undefined) as
       | RawSession
       | undefined;
     return row ? hydrateSession(row) : undefined;
@@ -289,8 +290,7 @@ export class Store {
 
   listSessions(): Session[] {
     const rows = this.db
-      .prepare("SELECT * FROM sessions ORDER BY id")
-      .all() as RawSession[];
+      .all("SELECT * FROM sessions ORDER BY id") as RawSession[];
     return rows.map(hydrateSession);
   }
 
@@ -319,11 +319,16 @@ export class Store {
 
   addEvent(type: EventType, payload: Record<string, unknown>): Event {
     const ts = new Date().toISOString();
-    const info = this.db
-      .prepare("INSERT INTO events (type, payload, ts) VALUES (?, ?, ?)")
-      .run(type, JSON.stringify(payload), ts);
+    this.db.run(
+      "INSERT INTO events (type, payload, ts) VALUES (?, ?, ?)",
+      type,
+      JSON.stringify(payload),
+      ts,
+    );
+    const row = (this.db
+      .all("SELECT last_insert_rowid() AS id")[0] ?? undefined) as { id: number };
     return {
-      id: Number(info.lastInsertRowid),
+      id: Number(row.id),
       type,
       payload,
       ts,
@@ -332,18 +337,16 @@ export class Store {
 
   getEventsSince(id: number): Event[] {
     const rows = this.db
-      .prepare("SELECT * FROM events WHERE id > ? ORDER BY id")
-      .all(id) as RawEvent[];
+      .all("SELECT * FROM events WHERE id > ? ORDER BY id", id) as RawEvent[];
     return rows.map(hydrateEvent);
   }
 
   /** Deltas with epoch > version (schema §4 GET /deltas?since=N). */
   getDeltasSince(version: number): Delta[] {
     const rows = this.db
-      .prepare(
+      .all(
         "SELECT payload FROM events WHERE type = 'delta.detected' ORDER BY id",
-      )
-      .all() as Array<{ payload: string }>;
+      ) as Array<{ payload: string }>;
     return rows
       .map((r) => JSON.parse(r.payload) as Delta)
       .filter((d) => d.epoch > version);
