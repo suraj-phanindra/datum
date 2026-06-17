@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "datum": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/lib/datum-mcp.js"],
+      "env": {
+        "DATUM_BUS_URL": "${user_config.bus_url}"
+      }
+    }
+  }
+}

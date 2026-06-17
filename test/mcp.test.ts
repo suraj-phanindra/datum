@@ -27,6 +27,10 @@ import {
   datum_deltas_since,
   datum_decide,
   datum_my_advisories,
+  datum_claim,
+  datum_sync,
+  datum_sessions,
+  callTool,
   handleRpc,
   TOOLS,
 } from "../server/mcp.ts";
@@ -156,6 +160,74 @@ test("datum_my_advisories -> resolves against the session id (no advisories seed
   assert.ok(Array.isArray(out.advisories));
 });
 
+test("datum_sessions -> the live roster including the three seeded sessions", async () => {
+  const out = (await datum_sessions()) as {
+    sessions: Array<{ id: string; human: string; branch: string; claim_files: string[] }>;
+  };
+  assert.ok(!("warning" in out), "should reach the bus");
+  assert.ok(Array.isArray(out.sessions));
+  const ben = out.sessions.find((s) => s.id === "sess-ben");
+  assert.ok(ben, "ben is on the roster");
+  assert.equal(ben!.human, "ben");
+  assert.equal(ben!.branch, "ben/api");
+  assert.deepEqual(ben!.claim_files, ["routes/users.ts"]);
+});
+
+test("datum_sync -> registry_version 8 + advisories + the one delta since v7 (from state)", async () => {
+  const out = (await datum_sync()) as {
+    registry_version: number;
+    advisories: unknown[];
+    deltas: Array<{ contract_id: string; mechanical_change: { kind: string } }>;
+  };
+  assert.ok(!("warning" in out), "should reach the bus");
+  assert.equal(out.registry_version, 8);
+  assert.ok(Array.isArray(out.advisories));
+  // last_synced_version in state is 7, so the hero rename delta is returned.
+  assert.equal(out.deltas.length, 1);
+  assert.equal(out.deltas[0].contract_id, "db.users");
+  assert.equal(out.deltas[0].mechanical_change.kind, "rename_column");
+});
+
+test("datum_claim (replace) -> sets the claim and echoes it back", async () => {
+  const out = (await datum_claim(["routes/invites.ts"], ["createInvite"])) as {
+    claim_files: string[];
+    claim_symbols: string[];
+  };
+  assert.ok(!("warning" in out), "should reach the bus");
+  assert.deepEqual(out.claim_files, ["routes/invites.ts"]);
+  assert.deepEqual(out.claim_symbols, ["createInvite"]);
+  // the PATCH landed on the bus: ben's roster claim now reflects the replacement.
+  const roster = (await datum_sessions()) as {
+    sessions: Array<{ id: string; claim_files: string[]; claim_symbols: string[] }>;
+  };
+  const ben = roster.sessions.find((s) => s.id === "sess-ben")!;
+  assert.deepEqual(ben.claim_files, ["routes/invites.ts"]);
+  assert.deepEqual(ben.claim_symbols, ["createInvite"]);
+});
+
+test("datum_claim (add) -> merges with the session's current claim from state, deduped", async () => {
+  // state seeds claim_files/claim_symbols, so add merges onto those.
+  const out = (await datum_claim(["routes/users.ts"], ["user.email"], true)) as {
+    claim_files: string[];
+    claim_symbols: string[];
+  };
+  assert.ok(!("warning" in out), "should reach the bus");
+  // state.json for this workspace has no claim arrays, so add merges onto [].
+  assert.deepEqual(out.claim_files, ["routes/users.ts"]);
+  assert.deepEqual(out.claim_symbols, ["user.email"]);
+});
+
+test("datum_claim via callTool dispatch -> coerces args and reaches the bus", async () => {
+  const out = (await callTool("datum_claim", {
+    files: ["UserCard.tsx"],
+    symbols: ["UserDTO.email"],
+    add: false,
+  })) as { claim_files: string[]; claim_symbols: string[] };
+  assert.ok(!("warning" in out), "should reach the bus");
+  assert.deepEqual(out.claim_files, ["UserCard.tsx"]);
+  assert.deepEqual(out.claim_symbols, ["UserDTO.email"]);
+});
+
 test("fail open: bus unreachable -> structured warning, no crash", async () => {
   const saved = process.env.DATUM_BUS_URL;
   // an unused localhost port (nothing listening) -> fetch rejects -> warning.
@@ -192,8 +264,8 @@ test("handleRpc: initialize + tools/list shape", async () => {
 
   const list = await handleRpc({ jsonrpc: "2.0", id: 2, method: "tools/list" });
   const tools = (list!.result as { tools: Array<{ name: string }> }).tools;
-  assert.equal(tools.length, 4);
-  assert.equal(TOOLS.length, 4);
+  assert.equal(tools.length, 7);
+  assert.equal(TOOLS.length, 7);
 });
 
 test("stdio smoke: spawn node server/mcp.ts, initialize + tools/list over JSON-RPC", async () => {
@@ -246,9 +318,12 @@ test("stdio smoke: spawn node server/mcp.ts, initialize + tools/list over JSON-R
   assert.equal(listResp.jsonrpc, "2.0");
   const names = (listResp.result.tools as Array<{ name: string }>).map((t) => t.name).sort();
   assert.deepEqual(names, [
+    "datum_claim",
     "datum_decide",
     "datum_deltas_since",
     "datum_my_advisories",
     "datum_registry_snapshot",
+    "datum_sessions",
+    "datum_sync",
   ]);
 });
