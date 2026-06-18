@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-06-18
+
+### Changed
+
+- Point the package `homepage` at the Datum site
+  (https://datum-site-eight.vercel.app/).
+
 ## [0.3.0] - 2026-06-17
 
 The Claude Code plugin, the open-core professionalization, and Datum Cloud: the
@@ -128,7 +135,8 @@ The initial release: the coordination core.
   `.ts` extensions on relative imports, async/await), `node --test` suites, and
   an esbuild build (`scripts/build.mjs` to `dist/`).
 
-[Unreleased]: https://github.com/suraj-phanindra/datum/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/suraj-phanindra/datum/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/suraj-phanindra/datum/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/suraj-phanindra/datum/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/suraj-phanindra/datum/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/suraj-phanindra/datum/releases/tag/v0.1.0

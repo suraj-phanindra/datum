@@ -1,6 +1,6 @@
 {
   "name": "datumctl",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "description": "The real-time coordination layer for teams of developers running Claude Code agents. Git coordinates code at rest; Datum coordinates agents in motion.",
   "engines": {
@@ -35,7 +35,7 @@
   ],
   "license": "MIT",
   "repository": { "type": "git", "url": "git+https://github.com/suraj-phanindra/datum.git" },
-  "homepage": "https://github.com/suraj-phanindra/datum#readme",
+  "homepage": "https://datum-site-eight.vercel.app/",
   "bugs": { "url": "https://github.com/suraj-phanindra/datum/issues" },
   "devDependencies": {
     "esbuild": "^0.28.1"
