@@ -3,6 +3,9 @@ node_modules/
 
 # build output
 dist/
+
+# @datum/core generated mirror (canonical source stays in server/)
+core/server/
 *.tsbuildinfo
 
 # datum runtime state (local cache + sqlite)
