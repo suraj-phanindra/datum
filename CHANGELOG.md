@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `datum-core`, the coordination core published as its own package (npm:
+  `datum-core`), so external consumers can depend on the core directly.
+- `LICENSING.md`, documenting the open-core boundary.
+
+### Changed
+
+- Moved the Datum Cloud backend (the Cloudflare hosted plane) into a separate,
+  private repository. This repository is the MIT-licensed open core; Datum Cloud
+  is the proprietary commercial product, and it depends on `datum-core` so the
+  same coordination core runs in both.
+
 ## [0.3.1] - 2026-06-18
 
 ### Changed

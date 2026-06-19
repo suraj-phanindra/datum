@@ -75,14 +75,18 @@ The committed `datum.json` (repo root) shares the team's `bus_url` and `workspac
 
 ## Open core
 
-The MIT-licensed core is the **whole protocol**: the CLI, the hooks, the MCP server, the single-team bus plus registry plus fence, the arbiter (bring your own Anthropic key), the git-native team layer, and the Claude Code skills. The core is never crippled, and a team can self-host all of it. **Datum Cloud** (premium, per-seat) adds the hosted multi-tenant bus, the team-management dashboard, a pooled arbiter (we pay the model cost), SSO, retention and audit, and analytics. Full model and architecture: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+The MIT-licensed core is the **whole protocol**: the CLI, the hooks, the MCP server, the single-team bus plus registry plus fence, the arbiter (bring your own Anthropic key), the git-native team layer, and the Claude Code skills. The core is never crippled, and a team can self-host all of it. **Datum Cloud** (premium, per-seat) adds the hosted multi-tenant bus, the team-management dashboard, a pooled arbiter (we pay the model cost), SSO, retention and audit, and analytics.
+
+Datum Cloud is developed in a **separate, private repository** and depends on the published [`datum-core`](https://www.npmjs.com/package/datum-core) package, so the same coordination core runs in both the self-hosted bus and the hosted plane. See [`LICENSING.md`](LICENSING.md) for the open-core boundary and [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full model and architecture.
 
 ## Project layout
 
 ```
 datum/
   cli/                 datumctl entry + commands
+  core/                datum-core: the coordination core as a package
   hooks/               datum-fence, datum-claim, datum-join, datum-guard
+  plugin/              the Claude Code plugin (hooks + MCP + skills)
   server/              bus + registry + watchlist + arbiter + MCP server
   web/                 the read-only "tower" dashboard
   demo/                headless scenario (npm run demo)
