@@ -1,5 +1,5 @@
 {
-  "name": "@datum/core",
+  "name": "datum-core",
   "version": "0.1.0",
   "type": "module",
   "exports": {
