@@ -5,7 +5,7 @@
 // failure (no key, network, non-2xx) falls back to shelling out to the local
 // `claude` CLI. The CLI fallback is the ONLY reason node:child_process appears in
 // the arbiter, so it is quarantined here (off advise.ts, which must stay node-free
-// for the Cloudflare bundle). The cloud arbiter (cloud/src/arbiter-consumer.ts)
+// for the Cloudflare bundle). The Datum Cloud arbiter (a separate private repo)
 // uses its own fetch-only client instead.
 
 import { spawn } from "node:child_process";

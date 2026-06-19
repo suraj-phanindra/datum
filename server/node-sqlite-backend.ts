@@ -4,8 +4,8 @@
 // node:fs/node:path for the on-disk file). It is deliberately quarantined here so
 // the shared core (server/store.ts, server/sql-backend.ts, server/schema.ts) stays
 // node-free and the Cloudflare Worker/DO bundle pulls in zero node built-ins. The
-// DoSqliteBackend (cloud/src/do-sqlite-backend.ts) is the second transport and
-// implements the same SqlBackend interface over ctx.storage.sql.
+// DoSqliteBackend, in the Datum Cloud backend (a separate private repo), is the
+// second transport and implements the same SqlBackend interface over ctx.storage.sql.
 
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
