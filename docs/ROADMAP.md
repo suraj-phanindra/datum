@@ -130,7 +130,8 @@ gain a hosted-bus mode (point sessions at a Cloud URL with a token).
 The Pages web app: GitHub login → org / workspace switcher → members + roles,
 workspaces, **contract registry browse + edit**, decision ledger, advisory history,
 live drift-card tower per workspace, settings. The existing read-only tower grows
-into the authenticated multi-tenant app.
+into the authenticated multi-tenant app. Built in the private `datum-cloud` repo (it
+is a Datum Cloud premium surface).
 
 ### WS2c — Billing + gating
 Stripe per-seat + metered arbiter usage; plan gates (seats, workspaces, retention,
@@ -144,22 +145,30 @@ arbiter caps) enforced in the Worker / DO; free-tier + upgrade flow.
 and credibility on the free tool before building the paid plane (standard open-core
 go-to-market).
 
-- **M1 — Credible OSS** (WS0): a stranger can land, trust it, and contribute. CI green.
-- **M2 — Irresistible wedge** (WS1): native agent behavior shipped; public OSS launch (docs site, Show HN). Adoption compounds here.
-- **M3 — Cloud private beta** (WS2a + WS2b): hosted bus + dashboard; design partners onboard with no VM; arbiter pooled.
+- **M1 — Credible OSS** (WS0) ✓ — professionalized, CI green, MIT open core.
+- **M2 — Irresistible wedge** (WS1) ✓ — the plugin + skills shipped; `datumctl` and `datum-core` on npm. (Public launch / docs site still ahead.)
+- **M3 — Cloud private beta** (WS2a ✓ deployed; WS2b in progress): the hosted bus is live; the dashboard is next.
 - **M4 — Monetize** (WS2c): per-seat billing, free tier, GA.
 
 ---
 
-## 6. Status today (starting point)
+## 6. Status (updated 2026-06-18)
 
-- `datumctl` published to npm (`0.2.0`); zero runtime deps, Node built-ins only.
-- OSS core working: CLI (all commands), hooks (fence/claim/join/guard), MCP server,
-  deterministic fence (fires with the arbiter disabled), watchlist + monotonic
-  registry, the Opus 4.8 arbiter (real per-recipient advisories + spec PR).
-- Self-hosted git-native team layer ("the team is the repo", zero login).
-- Read-only tower deployed; headless `datum demo` passes end to end.
-- Not yet built: everything in WS1–WS2c, plus the WS0 cleanup.
+- **WS0 done.** Repo professionalized; CI green; MIT open core.
+- **WS1 done.** Claude Code plugin + 5 skills + 3 MCP tools shipped; `datum-join`
+  self-seeds git-native state (no separate `datumctl init`).
+- **WS2a done and deployed.** Datum Cloud is live on Cloudflare at
+  `https://datum.surajphanindra.workers.dev` (Worker + `WorkspaceBus` Durable Object +
+  D1 + arbiter Queue + GitHub App). The cross-repo Durable Object test passes against
+  `datum-core`.
+- **Open-core split done.** This **public** repo (MIT) holds the core + wedge and
+  publishes `datum-core`; the Cloud backend lives in the **private** `datum-cloud` repo
+  and depends on `datum-core`. See `LICENSING.md`.
+- npm: `datumctl@0.3.1`, `datum-core@0.1.0`.
+- **Next:** WS2b (management dashboard) and WS2c (billing), both built in the private
+  `datum-cloud` repo. Still pending to fully enable Cloud login + arbiter spec-PRs:
+  register the GitHub OAuth app + GitHub App and set their secrets (the worker runs
+  without them today).
 
 ---
 

@@ -49,12 +49,14 @@ the protocol still works. That ordering is deliberate; preserve it.
 ```
 datum/
   cli/                 datumctl entry point + commands (init, serve, decide, ...)
+  core/                datum-core: the coordination core re-exported as a package (npm: datum-core)
   hooks/               the four hooks: datum-fence, datum-claim, datum-join, datum-guard
+  plugin/              the Claude Code plugin (the four hooks + MCP + five skills)
   server/              the coordination bus: registry + watchlist parser + fence version + arbiter + MCP server
   web/                 the read-only "tower" dashboard (observability only)
   demo/                headless end-to-end scenario ("npm run demo")
   test/                node --test suites
-  scripts/             build.mjs (esbuild bundling to dist/)
+  scripts/             build.mjs (esbuild bundling to dist/), build-core.mjs, build-plugin.mjs
   docs/                ROADMAP.md, design brief, and spec
   datum Design System/ design tokens export (source of truth for the tower's look)
 ```
@@ -69,6 +71,15 @@ datum/
   (Judge) and the MCP server. Teams are git-native here: identity comes from git
   config (`user.name` / `user.email`), the workspace id derives from the git remote,
   and a committed `datum.json` shares the bus url + workspace. No login for self-hosted.
+- **core/** is `datum-core`: the backend-agnostic coordination core (`Store`, `registry`,
+  `watchlist`, `fence`, `reconcile`, the transport-agnostic `routeBus`, `schema`, and the
+  arbiter helpers) re-exported as one package and published to npm. `server/` is the
+  source of truth; `core/server/` is a generated mirror (`scripts/build-core.mjs`). The
+  private Datum Cloud backend depends on `datum-core` so the same core runs in both.
+- **plugin/** is the Claude Code plugin: the four hooks, the MCP server, and five skills
+  (`coordinate`, `claim`, `sync`, `resolve-fence`, `decide`), installable via
+  `/plugin marketplace add suraj-phanindra/datum`. Bundled into `plugin/lib/` by
+  `scripts/build-plugin.mjs`.
 
 ## Running it
 
@@ -114,8 +125,13 @@ hooks, the MCP server, the single-team bus + registry + fence, the arbiter (with
 bring-your-own Anthropic key), the git-native team layer, and the Claude Code skills.
 Datum Cloud (premium, per-seat) adds the hosted multi-tenant bus, the team-management
 dashboard, a pooled arbiter (we pay the model cost), SSO, retention / audit, and
-analytics. The core is never crippled. Full detail and the build sequence are in
-`docs/ROADMAP.md`.
+analytics. The core is never crippled.
+
+**Datum Cloud is developed in a separate, private repository** (`datum-cloud`) and
+depends on the published `datum-core` package, so the same coordination core runs in
+both the self-hosted bus and the hosted plane. This repository is the MIT open core;
+the cloud backend is not here. See `LICENSING.md` for the boundary and `docs/ROADMAP.md`
+for the full model and build sequence.
 
 ## Contributing
 
