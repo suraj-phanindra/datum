@@ -1,0 +1,3 @@
+# datum-core
+
+The coordination core of [Datum](https://github.com/suraj-phanindra/datum) — the Store, registry, watchlist, fence, reconciler, transport-agnostic bus router, schema, and arbiter — re-exported as one public surface so the OSS self-hosted bus and Datum Cloud share a single implementation. It ships TypeScript source (not bundled JS or `.d.ts`), because its only consumer is a bundler-based (esbuild) Worker that compiles the `.ts` directly. The `server/` tree in the public Datum repo is the source of truth; `core/server/` here is a generated mirror produced by `scripts/build-core.mjs`, and `core/index.ts` re-exports from it.

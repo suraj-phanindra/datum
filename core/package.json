@@ -1,0 +1,23 @@
+{
+  "name": "datum-core",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "server"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/suraj-phanindra/datum.git",
+    "directory": "core"
+  },
+  "description": "Datum coordination core (shared by the OSS bus and Datum Cloud). Ships TypeScript source; targets bundler-based (esbuild) consumers.",
+  "scripts": {
+    "build": "node ../scripts/build-core.mjs",
+    "prepublishOnly": "node ../scripts/build-core.mjs"
+  }
+}

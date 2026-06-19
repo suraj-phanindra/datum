@@ -20,6 +20,7 @@
     "test:watch": "node --test --watch \"test/**/*.test.ts\"",
     "build": "node scripts/build.mjs",
     "build:plugin": "node scripts/build-plugin.mjs",
+    "build:core": "node scripts/build-core.mjs",
     "prepublishOnly": "npm run build",
     "server": "node server/index.ts",
     "demo": "node demo/datum-demo.ts",
