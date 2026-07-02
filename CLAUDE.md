@@ -51,7 +51,7 @@ datum/
   cli/                 datumctl entry point + commands (init, serve, decide, ...)
   core/                datum-core: the coordination core re-exported as a package (npm: datum-core)
   hooks/               the four hooks: datum-fence, datum-claim, datum-join, datum-guard
-  plugin/              the Claude Code plugin (the four hooks + MCP + five skills)
+  plugin/              the Claude Code plugin (the four hooks + MCP + six skills)
   server/              the coordination bus: registry + watchlist parser + fence version + arbiter + MCP server
   web/                 the read-only "tower" dashboard (observability only)
   demo/                headless end-to-end scenario ("npm run demo")
@@ -76,8 +76,8 @@ datum/
   arbiter helpers) re-exported as one package and published to npm. `server/` is the
   source of truth; `core/server/` is a generated mirror (`scripts/build-core.mjs`). The
   private Datum Cloud backend depends on `datum-core` so the same core runs in both.
-- **plugin/** is the Claude Code plugin: the four hooks, the MCP server, and five skills
-  (`coordinate`, `claim`, `sync`, `resolve-fence`, `decide`), installable via
+- **plugin/** is the Claude Code plugin: the four hooks, the MCP server, and six skills
+  (`setup`, `coordinate`, `claim`, `sync`, `resolve-fence`, `decide`), installable via
   `/plugin marketplace add suraj-phanindra/datum`. Bundled into `plugin/lib/` by
   `scripts/build-plugin.mjs`.
 

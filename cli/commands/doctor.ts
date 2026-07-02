@@ -104,7 +104,7 @@ export const doctorCommand: Command = {
     checks.push({
       label: "bus reachable",
       pass: reachable,
-      detail: reachable ? ident(ctx.busUrl) : `${ctx.busUrl} (start with \`datum serve\`)`,
+      detail: reachable ? ident(ctx.busUrl) : `${ctx.busUrl} (start with \`datum up\`)`,
       critical: true,
     });
 

@@ -88,11 +88,11 @@ async function main(): Promise<void> {
       claim_symbols: state.claim_symbols ?? [],
     });
   } catch (err) {
-    return failOpen(datumDir, `bus error: ${errMsg(err)}`);
+    return busDown(datumDir, busUrl, `bus error: ${errMsg(err)}`);
   }
 
   if (!body || typeof body.registry_version !== "number") {
-    return failOpen(datumDir, `bus /sessions unreachable at ${busUrl}`);
+    return busDown(datumDir, busUrl, `bus /sessions unreachable at ${busUrl}`);
   }
 
   const registryVersion = body.registry_version;
@@ -166,6 +166,38 @@ function failOpen(datumDir: string, message: string): void {
     /* even the warning is best-effort; never throw */
   }
   // no stdout -> no context injected, session proceeds.
+}
+
+/** Loopback bus_url — the one this machine can start itself with `datum up`. */
+function isLocalBus(busUrl: string): boolean {
+  try {
+    const h = new URL(busUrl).hostname;
+    return h === "127.0.0.1" || h === "localhost" || h === "::1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The bus is down. Log fail-open as always, and for a LOCAL bus inject a one-line
+ * nudge so the agent starts it itself (the agent owns the bus). We don't spawn the
+ * bus from the hook — this bundled hook has no CLI entrypoint to launch, and the
+ * agent has a shell. A remote/cloud bus being down is a login/network issue, not
+ * something `datum up` fixes, so no nudge there.
+ */
+function busDown(datumDir: string, busUrl: string, message: string): void {
+  failOpen(datumDir, message);
+  if (isLocalBus(busUrl)) {
+    emit({
+      hookSpecificOutput: {
+        hookEventName: "SessionStart",
+        additionalContext:
+          "datum: the local coordination bus is not running, so drift protection is off " +
+          "for this session. Start it in the background with `datum up` (or `npx datumctl up`) " +
+          "and it stays up. The /datum:setup skill can configure and start everything for you.",
+      },
+    });
+  }
 }
 
 // ---- zero-init self-seed ----

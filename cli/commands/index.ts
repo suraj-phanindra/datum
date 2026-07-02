@@ -22,6 +22,8 @@ import { diffCommand } from "./diff.ts";
 import { logCommand } from "./log.ts";
 import { decideCommand } from "./decide.ts";
 import { serveCommand } from "./serve.ts";
+import { upCommand } from "./up.ts";
+import { downCommand } from "./down.ts";
 import { towerCommand } from "./tower.ts";
 import { demoCommand } from "./demo.ts";
 
@@ -50,6 +52,8 @@ export const COMMAND_LIST: Command[] = [
   decideCommand,
   // ops / servers
   serveCommand,
+  upCommand,
+  downCommand,
   towerCommand,
   demoCommand,
 ];
