@@ -175,10 +175,10 @@ async function main() {
       claim_symbols: state.claim_symbols ?? []
     });
   } catch (err) {
-    return failOpen(datumDir, `bus error: ${errMsg(err)}`);
+    return busDown(datumDir, busUrl, `bus error: ${errMsg(err)}`);
   }
   if (!body || typeof body.registry_version !== "number") {
-    return failOpen(datumDir, `bus /sessions unreachable at ${busUrl}`);
+    return busDown(datumDir, busUrl, `bus /sessions unreachable at ${busUrl}`);
   }
   const registryVersion = body.registry_version;
   const contracts = body.snapshot?.contracts ?? [];
@@ -230,6 +230,25 @@ function failOpen(datumDir, message) {
 `
     );
   } catch {
+  }
+}
+function isLocalBus(busUrl) {
+  try {
+    const h = new URL(busUrl).hostname;
+    return h === "127.0.0.1" || h === "localhost" || h === "::1";
+  } catch {
+    return false;
+  }
+}
+function busDown(datumDir, busUrl, message) {
+  failOpen(datumDir, message);
+  if (isLocalBus(busUrl)) {
+    emit({
+      hookSpecificOutput: {
+        hookEventName: "SessionStart",
+        additionalContext: "datum: the local coordination bus is not running, so drift protection is off for this session. Start it in the background with `datum up` (or `npx datumctl up`) and it stays up. The /datum:setup skill can configure and start everything for you."
+      }
+    });
   }
 }
 function seedStateIfNeeded(cwd, sessionId) {

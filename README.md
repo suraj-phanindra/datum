@@ -65,7 +65,7 @@ The plugin wires everything an agent needs to coordinate natively:
 
 - **The four hooks**: `datum-join` (SessionStart), `datum-claim` (PostToolUse), `datum-fence` (PreToolUse), and `datum-guard` (Stop).
 - **The MCP server**, so agents can read the registry and ledger and publish claims, syncs, and decisions.
-- **Five skills**, namespaced under `/datum:`, that teach the agent the coordination loop and drive the MCP tools: `coordinate`, `claim`, `sync`, `resolve-fence`, and `decide`.
+- **Six skills**, namespaced under `/datum:`, that drive the agent: `setup` configures Datum and starts the bus with zero manual steps, and `coordinate`, `claim`, `sync`, `resolve-fence`, and `decide` teach the coordination loop and drive the MCP tools.
 
 It is **zero-init**: the `datum-join` hook self-seeds git-native identity (human, email, branch, and workspace from your git config) on the first session, so there is no separate `datumctl init` step. Solo users get `http://127.0.0.1:4317` by default; teams get their bus from the committed `datum.json`.
 

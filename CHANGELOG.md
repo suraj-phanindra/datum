@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `datum up` / `datum down`: start and stop the local bus as a background
+  (detached) process, so an agent can bring coordination up with zero setup and
+  keep working. `datum up` is idempotent and health-checks before it returns.
+- A `datum:setup` skill that configures Datum end to end (hooks, MCP, identity,
+  and the local bus, or a Datum Cloud sign-in) with zero manual steps, plus a
+  SessionStart nudge that tells the agent to run `datum up` when the local bus
+  is down.
 - `datum-core`, the coordination core published as its own package (npm:
   `datum-core`), so external consumers can depend on the core directly.
 - `LICENSING.md`, documenting the open-core boundary.
