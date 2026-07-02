@@ -59,31 +59,52 @@ export async function ensureBusUp(
   opts: { timeoutMs?: number } = {},
 ): Promise<EnsureResult> {
   if (!isLocalBus(busUrl)) return { status: "remote", url: busUrl };
-  if (await busReachable(busUrl)) return { status: "reachable", url: busUrl };
 
+  // Bind the SAME host:port we probe, so a loopback bus_url like http://[::1]:4317
+  // or a portless one can't bind 127.0.0.1:4317 while we poll a different address.
+  let u: URL;
+  try {
+    u = new URL(busUrl);
+  } catch {
+    return { status: "failed", url: busUrl };
+  }
+  const host = u.hostname;
+  const port = u.port || "4317";
+  const origin = host.includes(":") ? `${u.protocol}//[${host}]:${port}` : `${u.protocol}//${host}:${port}`;
+
+  if (await busReachable(origin)) return { status: "reachable", url: origin };
+
+  let child;
   try {
     mkdirSync(join(dir, ".datum"), { recursive: true });
     const log = openSync(busLogPath(dir), "a");
-    const port = new URL(busUrl).port || "4317";
     const cliEntry = process.argv[1]; // this datum CLI; spawning it with `serve` reuses serve verbatim.
-    const child = spawn(process.execPath, [cliEntry, "serve", "--port", port], {
+    child = spawn(process.execPath, [cliEntry, "serve", "--host", host, "--port", port], {
       cwd: dir,
       detached: true,
       stdio: ["ignore", log, log],
       env: { ...process.env, DATUM_BUS_URL: busUrl },
     });
     child.unref();
-    if (child.pid) writeFileSync(busPidPath(dir), String(child.pid) + "\n", "utf8");
   } catch {
-    return { status: "failed", url: busUrl };
+    return { status: "failed", url: origin };
   }
 
+  // Record the pid only once the bus is reachable AND our child is still the one
+  // running it. ponytail: under two concurrent `datum up` in one repo, the loser
+  // hits EADDRINUSE and exits within a tick of binding; the exitCode guard keeps
+  // that dead pid from clobbering the winner's pidfile (which `datum down` needs).
   const deadline = Date.now() + (opts.timeoutMs ?? 4000);
   while (Date.now() < deadline) {
     await new Promise((r) => setTimeout(r, 120));
-    if (await busReachable(busUrl)) return { status: "started", url: busUrl };
+    if (await busReachable(origin)) {
+      const oursAlive = child.exitCode === null && child.pid != null;
+      if (oursAlive) writeFileSync(busPidPath(dir), String(child.pid) + "\n", "utf8");
+      return { status: oursAlive ? "started" : "reachable", url: origin };
+    }
+    if (child.exitCode !== null) return { status: "failed", url: origin }; // our serve died (e.g. port in use)
   }
-  return { status: "failed", url: busUrl };
+  return { status: "failed", url: origin };
 }
 
 export type StopResult = { stopped: boolean; pid?: number };

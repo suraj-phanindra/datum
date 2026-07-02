@@ -33,7 +33,7 @@ test("ensureBusUp: an already-running local bus is a no-op (reachable, no spawn)
     assert.equal(await busReachable(bus.url), true);
     const res = await ensureBusUp(dir, bus.url);
     assert.equal(res.status, "reachable");
-    assert.equal(res.url, bus.url);
+    assert.equal(await busReachable(res.url), true); // returned url is the live bus
     // no pidfile written for a bus we did not start
     assert.equal(existsSync(busPidPath(dir)), false);
   } finally {
